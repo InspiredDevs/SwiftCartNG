@@ -69,6 +69,18 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
+      // Update stock quantities for each product
+      for (const item of cart) {
+        const { error: stockError } = await supabase.rpc('decrement_stock', {
+          product_id: item.id,
+          quantity_to_subtract: item.quantity
+        });
+        
+        if (stockError) {
+          console.error("Error updating stock:", stockError);
+        }
+      }
+
       toast.success("Order placed successfully!");
       clearCart();
       navigate("/");
