@@ -25,7 +25,7 @@ const Contact = () => {
     setFormData({ name: "", email: "", message: "" });
   };
 
-  const whatsappNumber = "2348001234567";
+  const whatsappNumber = "2348056535839";
   const whatsappMessage = "Hi! I'd like to inquire about your products.";
 
   return (
@@ -111,10 +111,10 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold mb-1">Phone</h3>
                     <a
-                      href="tel:+2348001234567"
+                      href="tel:+2348056535839"
                       className="text-muted-foreground hover:text-primary transition-colors"
                     >
-                      +234 800 123 4567
+                      +234 805 653 5839
                     </a>
                   </div>
                 </div>

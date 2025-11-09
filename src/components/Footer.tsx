@@ -37,7 +37,10 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <span>+234 800 123 4567</span>
+                <span>+234 805 653 5839</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span>Chat with us on WhatsApp</span>
               </li>
             </ul>
           </div>
@@ -78,6 +81,17 @@ const Footer = () => {
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} SwiftCart NG. All rights reserved.</p>
+          <p className="mt-2">
+            Made with uttermost respect 🫡 by{" "}
+            <a 
+              href="https://inspireddevs.vercel.app" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors"
+            >
+              Inspireddevs
+            </a>
+          </p>
         </div>
       </div>
     </footer>
