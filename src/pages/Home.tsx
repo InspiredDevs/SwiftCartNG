@@ -1,12 +1,16 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/ProductCard";
-import { products, categories } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 import { ArrowRight, Truck, Shield, Headphones, Star } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 
 const Home = () => {
+  const { products, loading } = useProducts();
   const featuredProducts = products.slice(0, 4);
+  
+  // Get unique categories from products
+  const categories = ["Watches", "Speakers", "Clothes", "Shoes", "Lunchboxes"];
 
   return (
     <div className="min-h-screen">
@@ -100,9 +104,15 @@ const Home = () => {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {loading ? (
+              <p className="col-span-4 text-center text-muted-foreground">Loading products...</p>
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <p className="col-span-4 text-center text-muted-foreground">No products available</p>
+            )}
           </div>
         </div>
       </section>

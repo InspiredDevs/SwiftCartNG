@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart } from "@/contexts/CartContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Checkout = () => {
@@ -13,16 +14,18 @@ const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     phone: "",
     address: "",
     paymentMethod: "paystack",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatPrice = (price: number) => {
     return `₦${price.toLocaleString()}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.phone || !formData.address) {
@@ -30,9 +33,51 @@ const Checkout = () => {
       return;
     }
 
-    toast.success("Order placed successfully!");
-    clearCart();
-    navigate("/");
+    setIsSubmitting(true);
+
+    try {
+      const totalAmount = getCartTotal();
+
+      // Insert order
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          customer_name: formData.name,
+          customer_email: formData.email || null,
+          customer_phone: formData.phone,
+          delivery_address: formData.address,
+          total_amount: totalAmount,
+          status: "Pending",
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Insert order items
+      const orderItems = cart.map((item) => ({
+        order_id: orderData.id,
+        product_name: item.name,
+        product_price: item.price,
+        quantity: item.quantity,
+        subtotal: item.price * item.quantity,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      toast.success("Order placed successfully!");
+      clearCart();
+      navigate("/");
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (cart.length === 0) {
@@ -61,6 +106,17 @@ const Checkout = () => {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email">Email (Optional)</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your.email@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
                   </div>
 
@@ -153,8 +209,8 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <Button type="submit" size="lg" className="w-full mt-6">
-                  Place Order
+                <Button type="submit" size="lg" className="w-full mt-6" disabled={isSubmitting}>
+                  {isSubmitting ? "Placing Order..." : "Place Order"}
                 </Button>
               </div>
             </div>

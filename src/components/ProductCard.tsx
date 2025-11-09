@@ -21,7 +21,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <Link to={`/product/${product.id}`}>
         <div className="aspect-square overflow-hidden bg-secondary">
           <img
-            src={product.image}
+            src={product.image_url}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -38,7 +38,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <span className="text-sm text-muted-foreground">{product.rating}</span>
         </div>
         <p className="text-xl font-bold text-primary">{formatPrice(product.price)}</p>
-        {!product.inStock && (
+        {!product.in_stock && (
           <p className="text-sm text-destructive font-medium mt-1">Out of Stock</p>
         )}
       </CardContent>
@@ -46,7 +46,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <Button
           className="w-full"
           onClick={() => addToCart(product)}
-          disabled={!product.inStock}
+          disabled={!product.in_stock}
         >
           <ShoppingCart className="h-4 w-4 mr-2" />
           Add to Cart

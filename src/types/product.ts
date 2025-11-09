@@ -1,12 +1,15 @@
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   price: number;
-  image: string;
+  image_url: string;
   category: string;
   description: string;
-  inStock: boolean;
+  in_stock: boolean;
   rating: number;
+  stock_quantity: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CartItem extends Product {

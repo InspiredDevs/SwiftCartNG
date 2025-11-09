@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
 import { ShoppingCart, Star, ArrowLeft, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,16 @@ import { Badge } from "@/components/ui/badge";
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
-  const product = products.find((p) => p.id === Number(id));
+  const { products, loading } = useProducts();
+  const product = products.find((p) => p.id === id);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl text-muted-foreground">Loading product...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -41,7 +50,7 @@ const ProductDetail = () => {
           {/* Product Image */}
           <div className="bg-secondary rounded-lg overflow-hidden aspect-square">
             <img
-              src={product.image}
+              src={product.image_url}
               alt={product.name}
               className="w-full h-full object-cover"
             />
@@ -76,8 +85,8 @@ const ProductDetail = () => {
               <div className="flex items-center gap-2 mb-4">
                 <Package className="h-5 w-5" />
                 <span className="font-medium">Stock Status:</span>
-                <Badge variant={product.inStock ? "default" : "destructive"}>
-                  {product.inStock ? "In Stock" : "Out of Stock"}
+                <Badge variant={product.in_stock ? "default" : "destructive"}>
+                  {product.in_stock ? "In Stock" : "Out of Stock"}
                 </Badge>
               </div>
             </div>
@@ -94,10 +103,10 @@ const ProductDetail = () => {
                 size="lg"
                 className="w-full text-lg"
                 onClick={() => addToCart(product)}
-                disabled={!product.inStock}
+                disabled={!product.in_stock}
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                {product.inStock ? "Add to Cart" : "Out of Stock"}
+                {product.in_stock ? "Add to Cart" : "Out of Stock"}
               </Button>
               
               <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground">

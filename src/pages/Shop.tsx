@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
-import { products, categories } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 
 const Shop = () => {
+  const { products, loading } = useProducts();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState(
     searchParams.get("category") || "All"
   );
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const maxPrice = 100000;
+  
+  // Get unique categories from products
+  const categories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
 
   useEffect(() => {
     const category = searchParams.get("category");
@@ -93,7 +97,11 @@ const Shop = () => {
               </p>
             </div>
 
-            {filteredProducts.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-16">
+                <p className="text-xl text-muted-foreground">Loading products...</p>
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
