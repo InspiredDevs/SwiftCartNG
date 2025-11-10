@@ -13,6 +13,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Contact from "./pages/Contact";
+import OrderTracking from "./pages/OrderTracking";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import Dashboard from "./pages/admin/Dashboard";
@@ -52,6 +53,7 @@ const App = () => (
                       <Route path="/cart" element={<Cart />} />
                       <Route path="/checkout" element={<Checkout />} />
                       <Route path="/contact" element={<Contact />} />
+                      <Route path="/track-order" element={<OrderTracking />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>
