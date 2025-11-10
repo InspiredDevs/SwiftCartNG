@@ -74,7 +74,7 @@ const ProductDetail = () => {
                   />
                 ))}
               </div>
-              <span className="text-muted-foreground">({product.rating})</span>
+              <span className="text-muted-foreground">({Math.round(product.rating * 10) / 10})</span>
             </div>
 
             <p className="text-4xl font-bold text-primary mb-6">

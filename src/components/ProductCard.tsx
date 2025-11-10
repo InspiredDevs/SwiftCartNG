@@ -35,7 +35,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </Link>
         <div className="flex items-center gap-1 mb-2">
           <Star className="h-4 w-4 fill-primary text-primary" />
-          <span className="text-sm text-muted-foreground">{product.rating}</span>
+          <span className="text-sm text-muted-foreground">{Math.round(product.rating * 10) / 10}</span>
         </div>
         <p className="text-xl font-bold text-primary">{formatPrice(product.price)}</p>
         {!product.in_stock && (
