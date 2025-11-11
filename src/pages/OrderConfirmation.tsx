@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Package, ShoppingBag } from "lucide-react";
+import { CheckCircle, Package, ShoppingBag, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface OrderDetails {
   id: string;
+  order_code: string;
   total_amount: number;
   customer_name: string;
   created_at: string;
@@ -22,6 +24,16 @@ const OrderConfirmation = () => {
   const orderId = searchParams.get("orderId");
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const copyOrderCode = () => {
+    if (order?.order_code) {
+      navigator.clipboard.writeText(order.order_code);
+      setCopied(true);
+      toast.success("Order ID copied!");
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -103,7 +115,21 @@ const OrderConfirmation = () => {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <p className="text-sm text-muted-foreground">Order ID</p>
-                <p className="font-mono text-sm font-medium">{order.id.slice(0, 8)}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-sm font-medium">{order.order_code}</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={copyOrderCode}
+                  >
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 text-green-500" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Order Date</p>

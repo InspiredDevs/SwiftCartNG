@@ -3,9 +3,10 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search } from 'lucide-react';
+import { Search, Copy, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface Order {
   id: string;
+  order_code: string;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -39,6 +41,14 @@ export default function Orders() {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copyOrderCode = (orderCode: string) => {
+    navigator.clipboard.writeText(orderCode);
+    setCopiedId(orderCode);
+    sonnerToast.success("Order ID copied!");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -168,6 +178,7 @@ export default function Orders() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Order ID</TableHead>
                   <TableHead>Order Date</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Phone</TableHead>
@@ -180,6 +191,23 @@ export default function Orders() {
               <TableBody>
                 {filteredOrders.map((order) => (
                   <TableRow key={order.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm">{order.order_code}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => copyOrderCode(order.order_code)}
+                        >
+                          {copiedId === order.order_code ? (
+                            <Check className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
                     <TableCell>{formatDate(order.created_at)}</TableCell>
                     <TableCell className="font-medium">{order.customer_name}</TableCell>
                     <TableCell>{order.customer_phone}</TableCell>

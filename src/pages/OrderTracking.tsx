@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Package, Loader2 } from 'lucide-react';
+import { Search, Package, Loader2, Copy, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { toast as sonnerToast } from 'sonner';
 
 interface Order {
   id: string;
+  order_code: string;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -27,6 +29,16 @@ export default function OrderTracking() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyOrderCode = () => {
+    if (order?.order_code) {
+      navigator.clipboard.writeText(order.order_code);
+      setCopied(true);
+      sonnerToast.success("Order ID copied!");
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +60,8 @@ export default function OrderTracking() {
       let query = supabase.from('orders').select('*');
 
       if (searchType === 'id') {
-        query = query.eq('id', searchValue.trim());
+        // Try to match by order_code first, fallback to UUID
+        query = query.or(`order_code.eq.${searchValue.trim()},id.eq.${searchValue.trim()}`);
       } else {
         query = query.eq('customer_phone', searchValue.trim());
       }
@@ -207,8 +220,20 @@ export default function OrderTracking() {
                       <Package className="h-5 w-5" />
                       Order Details
                     </CardTitle>
-                    <CardDescription className="mt-2">
-                      Order ID: {order.id}
+                    <CardDescription className="mt-2 flex items-center gap-2">
+                      Order ID: {order.order_code}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={copyOrderCode}
+                      >
+                        {copied ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
                     </CardDescription>
                   </div>
                   <Badge className={getStatusColor(order.status)}>

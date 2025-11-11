@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { generateOrderCode } from "@/lib/utils";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ const Checkout = () => {
 
     try {
       const totalAmount = getCartTotal();
+      const orderCode = generateOrderCode();
 
       // Insert order
       const { data: orderData, error: orderError } = await supabase
@@ -48,6 +50,7 @@ const Checkout = () => {
           delivery_address: formData.address,
           total_amount: totalAmount,
           status: "Pending",
+          order_code: orderCode,
         })
         .select()
         .single();

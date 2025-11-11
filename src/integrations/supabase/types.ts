@@ -84,6 +84,7 @@ export type Database = {
           customer_phone: string
           delivery_address: string
           id: string
+          order_code: string
           status: string | null
           total_amount: number
           updated_at: string | null
@@ -95,6 +96,7 @@ export type Database = {
           customer_phone: string
           delivery_address: string
           id?: string
+          order_code: string
           status?: string | null
           total_amount: number
           updated_at?: string | null
@@ -106,6 +108,7 @@ export type Database = {
           customer_phone?: string
           delivery_address?: string
           id?: string
+          order_code?: string
           status?: string | null
           total_amount?: number
           updated_at?: string | null
@@ -205,6 +208,7 @@ export type Database = {
         Args: { product_id: string; quantity_to_subtract: number }
         Returns: undefined
       }
+      generate_order_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
