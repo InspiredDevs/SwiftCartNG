@@ -3,6 +3,7 @@ import { ShoppingCart, Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useState } from "react";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { getCartCount } = useCart();
@@ -33,6 +34,7 @@ const Navbar = () => {
             <Link to="/track-order" className="text-foreground hover:text-primary transition-colors">
               Track Order
             </Link>
+            <ThemeToggle />
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />
@@ -94,6 +96,10 @@ const Navbar = () => {
               >
                 Track Order
               </Link>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground">Theme:</span>
+                <ThemeToggle />
+              </div>
               <Link
                 to="/cart"
                 className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"

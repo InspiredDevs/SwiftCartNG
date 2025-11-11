@@ -10,7 +10,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  X
+  X,
+  Mail,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -40,6 +41,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { icon: Package, label: 'Products', path: '/admin/products' },
     { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
     { icon: Users, label: 'Customers', path: '/admin/customers' },
+    { icon: Mail, label: 'Messages', path: '/admin/messages' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 
