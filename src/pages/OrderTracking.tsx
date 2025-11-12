@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -136,9 +134,7 @@ export default function OrderTracking() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto space-y-8">
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-bold">Track Your Order</h1>
@@ -282,8 +278,6 @@ export default function OrderTracking() {
             </Card>
           )}
         </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
   );
 }

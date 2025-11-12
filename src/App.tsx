@@ -25,6 +25,13 @@ import Orders from "./pages/admin/Orders";
 import Customers from "./pages/admin/Customers";
 import Settings from "./pages/admin/Settings";
 import Messages from "./pages/admin/Messages";
+import Sellers from "./pages/admin/Sellers";
+import Login from "./pages/auth/Login";
+import CustomerSignup from "./pages/auth/CustomerSignup";
+import SellerSignup from "./pages/auth/SellerSignup";
+import SellerDashboard from "./pages/seller/SellerDashboard";
+import SellerProducts from "./pages/seller/SellerProducts";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -38,14 +45,60 @@ const App = () => (
               <Toaster />
               <Sonner />
               <Routes>
+                {/* Auth Routes - No Navbar/Footer */}
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/auth/signup" element={<CustomerSignup />} />
+                <Route path="/auth/seller-signup" element={<SellerSignup />} />
+                
                 {/* Admin Routes - No Navbar/Footer */}
                 <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/dashboard" element={<Dashboard />} />
-                <Route path="/admin/products" element={<Products />} />
-                <Route path="/admin/orders" element={<Orders />} />
-                <Route path="/admin/customers" element={<Customers />} />
-                <Route path="/admin/settings" element={<Settings />} />
-                <Route path="/admin/messages" element={<Messages />} />
+                <Route path="/admin/dashboard" element={
+                  <ProtectedRoute requireAdmin>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/products" element={
+                  <ProtectedRoute requireAdmin>
+                    <Products />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/orders" element={
+                  <ProtectedRoute requireAdmin>
+                    <Orders />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/customers" element={
+                  <ProtectedRoute requireAdmin>
+                    <Customers />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/settings" element={
+                  <ProtectedRoute requireAdmin>
+                    <Settings />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/messages" element={
+                  <ProtectedRoute requireAdmin>
+                    <Messages />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/sellers" element={
+                  <ProtectedRoute requireAdmin>
+                    <Sellers />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Seller Routes - With Navbar/Footer */}
+                <Route path="/seller/dashboard" element={
+                  <ProtectedRoute requireSeller>
+                    <SellerDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/seller/products" element={
+                  <ProtectedRoute requireSeller>
+                    <SellerProducts />
+                  </ProtectedRoute>
+                } />
                 
                 {/* Customer Routes - With Navbar/Footer */}
                 <Route path="/*" element={

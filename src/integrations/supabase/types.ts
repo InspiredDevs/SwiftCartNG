@@ -123,9 +123,11 @@ export type Database = {
           id: string
           image_url: string | null
           in_stock: boolean | null
+          is_official_store: boolean | null
           name: string
           price: number
           rating: number | null
+          seller_id: string | null
           stock_quantity: number | null
           updated_at: string | null
         }
@@ -136,9 +138,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
+          is_official_store?: boolean | null
           name: string
           price: number
           rating?: number | null
+          seller_id?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
         }
@@ -149,9 +153,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean | null
+          is_official_store?: boolean | null
           name?: string
           price?: number
           rating?: number | null
+          seller_id?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
         }
@@ -178,6 +184,84 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string
+          product_id: string
+          rating: number
+          review_text: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id: string
+          product_id: string
+          rating: number
+          review_text?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          product_id?: string
+          rating?: number
+          review_text?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_stores: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_approved: boolean | null
+          store_description: string | null
+          store_name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          store_description?: string | null
+          store_name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          store_description?: string | null
+          store_name?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -218,7 +302,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "customer"
+      app_role: "admin" | "customer" | "seller"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -346,7 +430,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "customer"],
+      app_role: ["admin", "customer", "seller"],
     },
   },
 } as const

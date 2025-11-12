@@ -7,9 +7,12 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isSeller: boolean;
+  isCustomer: boolean;
+  userRole: 'admin' | 'seller' | 'customer' | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, role?: 'customer' | 'seller') => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -19,6 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSeller, setIsSeller] = useState(false);
+  const [isCustomer, setIsCustomer] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'seller' | 'customer' | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -36,6 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 0);
         } else {
           setIsAdmin(false);
+          setIsSeller(false);
+          setIsCustomer(false);
+          setUserRole(null);
         }
       }
     );
@@ -61,32 +70,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .eq('role', 'admin')
         .maybeSingle();
 
-      setIsAdmin(!!data);
+      if (data) {
+        setUserRole(data.role as 'admin' | 'seller' | 'customer');
+        setIsAdmin(data.role === 'admin');
+        setIsSeller(data.role === 'seller');
+        setIsCustomer(data.role === 'customer');
+      } else {
+        setUserRole(null);
+        setIsAdmin(false);
+        setIsSeller(false);
+        setIsCustomer(false);
+      }
     } catch (error) {
-      console.error('Error checking admin role:', error);
+      console.error('Error checking user role:', error);
+      setUserRole(null);
       setIsAdmin(false);
+      setIsSeller(false);
+      setIsCustomer(false);
     } finally {
       setLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     
-    if (!error) {
-      navigate('/admin/dashboard');
+    if (!error && data.user) {
+      // Check user role and redirect accordingly
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+      
+      if (roleData?.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (roleData?.role === 'seller') {
+        navigate('/seller/dashboard');
+      } else {
+        navigate('/');
+      }
     }
     
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role: 'customer' | 'seller' = 'customer') => {
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -96,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
+          role: role,
         },
       },
     });
@@ -106,11 +141,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
-    navigate('/admin/login');
+    setIsSeller(false);
+    setIsCustomer(false);
+    setUserRole(null);
+    navigate('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isSeller, isCustomer, userRole, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
