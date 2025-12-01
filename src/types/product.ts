@@ -8,6 +8,8 @@ export interface Product {
   in_stock: boolean;
   rating: number;
   stock_quantity: number;
+  seller_id?: string;
+  status?: string;
   created_at?: string;
   updated_at?: string;
 }

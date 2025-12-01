@@ -1,15 +1,44 @@
 import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, Star, ArrowLeft, Package } from "lucide-react";
+import { ShoppingCart, Star, ArrowLeft, Package, Store } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import ProductReviews from "@/components/ProductReviews";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
   const { products, loading } = useProducts();
   const product = products.find((p) => p.id === id);
+  const [sellerInfo, setSellerInfo] = useState<{ name: string; isOfficial: boolean } | null>(null);
+
+  useEffect(() => {
+    if (product?.seller_id) {
+      fetchSellerInfo(product.seller_id);
+    }
+  }, [product]);
+
+  const fetchSellerInfo = async (sellerId: string) => {
+    try {
+      const { data: storeData } = await supabase
+        .from('seller_stores')
+        .select('store_name')
+        .eq('user_id', sellerId)
+        .maybeSingle();
+
+      if (storeData) {
+        setSellerInfo({ name: storeData.store_name, isOfficial: false });
+      } else {
+        setSellerInfo({ name: 'SwiftCart Official Store', isOfficial: true });
+      }
+    } catch (error) {
+      console.error('Error fetching seller info:', error);
+      setSellerInfo({ name: 'SwiftCart Official Store', isOfficial: true });
+    }
+  };
 
   if (loading) {
     return (
@@ -81,6 +110,21 @@ const ProductDetail = () => {
               {formatPrice(product.price)}
             </p>
 
+            {sellerInfo && (
+              <div className="mb-6 flex items-center gap-2 p-3 bg-secondary rounded-lg">
+                <Store className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Sold by</p>
+                  <p className="font-medium">
+                    {sellerInfo.name}
+                    {sellerInfo.isOfficial && (
+                      <Badge variant="secondary" className="ml-2">Official</Badge>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <Package className="h-5 w-5" />
@@ -125,6 +169,11 @@ const ProductDetail = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-16">
+          <ProductReviews productId={product.id} productRating={product.rating} />
         </div>
       </div>
     </div>

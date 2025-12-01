@@ -93,13 +93,7 @@ export default function Login() {
             <p className="text-muted-foreground">
               Don't have an account?{' '}
               <Link to="/auth/signup" className="text-primary hover:underline font-medium">
-                Sign up as Customer
-              </Link>
-            </p>
-            <p className="text-muted-foreground">
-              Want to sell?{' '}
-              <Link to="/auth/seller-signup" className="text-primary hover:underline font-medium">
-                Register as Seller
+                Sign up
               </Link>
             </p>
           </div>

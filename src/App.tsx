@@ -27,11 +27,12 @@ import Settings from "./pages/admin/Settings";
 import Messages from "./pages/admin/Messages";
 import Sellers from "./pages/admin/Sellers";
 import Login from "./pages/auth/Login";
-import CustomerSignup from "./pages/auth/CustomerSignup";
-import SellerSignup from "./pages/auth/SellerSignup";
+import Signup from "./pages/auth/Signup";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
+import AddProduct from "./pages/seller/AddProduct";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PendingProducts from "./pages/admin/PendingProducts";
 
 const queryClient = new QueryClient();
 
@@ -46,9 +47,8 @@ const App = () => (
               <Sonner />
               <Routes>
                 {/* Auth Routes - No Navbar/Footer */}
-                <Route path="/auth/login" element={<Login />} />
-                <Route path="/auth/signup" element={<CustomerSignup />} />
-                <Route path="/auth/seller-signup" element={<SellerSignup />} />
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/signup" element={<Signup />} />
                 
                 {/* Admin Routes - No Navbar/Footer */}
                 <Route path="/admin/login" element={<AdminLogin />} />
@@ -97,6 +97,16 @@ const App = () => (
                 <Route path="/seller/products" element={
                   <ProtectedRoute requireSeller>
                     <SellerProducts />
+                  </ProtectedRoute>
+                } />
+                <Route path="/seller/products/new" element={
+                  <ProtectedRoute requireSeller>
+                    <AddProduct />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/pending-products" element={
+                  <ProtectedRoute requireAdmin>
+                    <PendingProducts />
                   </ProtectedRoute>
                 } />
                 

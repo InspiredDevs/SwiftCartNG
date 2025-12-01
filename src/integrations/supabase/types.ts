@@ -128,6 +128,7 @@ export type Database = {
           price: number
           rating: number | null
           seller_id: string | null
+          status: string | null
           stock_quantity: number | null
           updated_at: string | null
         }
@@ -143,6 +144,7 @@ export type Database = {
           price: number
           rating?: number | null
           seller_id?: string | null
+          status?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
         }
@@ -158,6 +160,7 @@ export type Database = {
           price?: number
           rating?: number | null
           seller_id?: string | null
+          status?: string | null
           stock_quantity?: number | null
           updated_at?: string | null
         }
@@ -298,6 +301,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      user_purchased_product: {
+        Args: { p_product_id: string; p_user_id: string }
         Returns: boolean
       }
     }
