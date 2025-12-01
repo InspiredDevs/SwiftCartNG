@@ -13,6 +13,7 @@ import {
   X,
   Mail,
   Store,
+  Clock,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -40,6 +41,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Package, label: 'Products', path: '/admin/products' },
+    { icon: Clock, label: 'Pending Products', path: '/admin/pending-products' },
     { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
     { icon: Users, label: 'Customers', path: '/admin/customers' },
     { icon: Store, label: 'Sellers', path: '/admin/sellers' },

@@ -33,6 +33,8 @@ interface Product {
   stock_quantity: number;
   in_stock: boolean;
   rating: number;
+  status: string;
+  seller_stores?: { store_name: string };
 }
 
 export default function Products() {
@@ -60,10 +62,40 @@ export default function Products() {
   }, [products, searchTerm, categoryFilter]);
 
   const fetchProducts = async () => {
-    const { data, error } = await supabase
+    const { data: productsData, error } = await supabase
       .from('products')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch products',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Fetch seller stores separately
+    const productsWithStores = await Promise.all(
+      (productsData || []).map(async (product) => {
+        if (product.seller_id) {
+          const { data: storeData } = await supabase
+            .from('seller_stores')
+            .select('store_name')
+            .eq('user_id', product.seller_id)
+            .maybeSingle();
+
+          return {
+            ...product,
+            seller_stores: storeData ? { store_name: storeData.store_name } : undefined
+          };
+        }
+        return product;
+      })
+    );
+
+    const data = productsWithStores;
 
     if (error) {
       toast({
@@ -108,7 +140,7 @@ export default function Products() {
     if (editingProduct) {
       const { error } = await supabase
         .from('products')
-        .update(productData)
+        .update({ ...productData, status: 'approved' })
         .eq('id', editingProduct.id);
 
       if (error) {
@@ -125,7 +157,7 @@ export default function Products() {
     } else {
       const { error } = await supabase
         .from('products')
-        .insert([productData]);
+        .insert([{ ...productData, status: 'approved' }]);
 
       if (error) {
         toast({
@@ -332,6 +364,20 @@ export default function Products() {
                 </div>
                 <h3 className="font-semibold mb-1">{product.name}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{product.category}</p>
+                {product.seller_stores && (
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Seller: {product.seller_stores.store_name}
+                  </p>
+                )}
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    product.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                    product.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  }`}>
+                    {product.status?.toUpperCase()}
+                  </span>
+                </div>
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-lg font-bold text-primary">
                     {formatCurrency(product.price)}
