@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./hooks/useAuth";
@@ -36,6 +36,16 @@ import PendingProducts from "./pages/admin/PendingProducts";
 
 const queryClient = new QueryClient();
 
+const LayoutWithNavbarAndFooter = () => (
+  <div className="flex flex-col min-h-screen">
+    <Navbar />
+    <main className="flex-1">
+      <Outlet />
+    </main>
+    <Footer />
+  </div>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
@@ -47,8 +57,8 @@ const App = () => (
               <Sonner />
               <Routes>
                 {/* Auth Routes - No Navbar/Footer */}
-          <Route path="/auth/login" element={<Login />} />
-          <Route path="/auth/signup" element={<Signup />} />
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/auth/signup" element={<Signup />} />
                 
                 {/* Admin Routes - No Navbar/Footer */}
                 <Route path="/admin/login" element={<AdminLogin />} />
@@ -87,50 +97,44 @@ const App = () => (
                     <Sellers />
                   </ProtectedRoute>
                 } />
-                
-                {/* Seller Routes - With Navbar/Footer */}
-                <Route path="/seller/dashboard" element={
-                  <ProtectedRoute requireSeller>
-                    <SellerDashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/products" element={
-                  <ProtectedRoute requireSeller>
-                    <SellerProducts />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/products/new" element={
-                  <ProtectedRoute requireSeller>
-                    <AddProduct />
-                  </ProtectedRoute>
-                } />
                 <Route path="/admin/pending-products" element={
                   <ProtectedRoute requireAdmin>
                     <PendingProducts />
                   </ProtectedRoute>
                 } />
                 
+                {/* Seller Routes - With Navbar/Footer */}
+                <Route element={<LayoutWithNavbarAndFooter />}>
+                  <Route path="/seller/dashboard" element={
+                    <ProtectedRoute requireSeller>
+                      <SellerDashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/seller/products" element={
+                    <ProtectedRoute requireSeller>
+                      <SellerProducts />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/seller/products/new" element={
+                    <ProtectedRoute requireSeller>
+                      <AddProduct />
+                    </ProtectedRoute>
+                  } />
+                </Route>
+                
                 {/* Customer Routes - With Navbar/Footer */}
-                <Route path="/*" element={
-                  <div className="flex flex-col min-h-screen">
-                    <Navbar />
-                    <main className="flex-1">
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/shop" element={<Shop />} />
-                        <Route path="/product/:id" element={<ProductDetail />} />
-                        <Route path="/cart" element={<Cart />} />
-                        <Route path="/checkout" element={<Checkout />} />
-                        <Route path="/order-confirmation" element={<OrderConfirmation />} />
-                        <Route path="/contact" element={<Contact />} />
-                        <Route path="/track-order" element={<OrderTracking />} />
-                        <Route path="/about" element={<About />} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </main>
-                    <Footer />
-                  </div>
-                } />
+                <Route element={<LayoutWithNavbarAndFooter />}>
+                  <Route index element={<Home />} />
+                  <Route path="shop" element={<Shop />} />
+                  <Route path="product/:id" element={<ProductDetail />} />
+                  <Route path="cart" element={<Cart />} />
+                  <Route path="checkout" element={<Checkout />} />
+                  <Route path="order-confirmation" element={<OrderConfirmation />} />
+                  <Route path="contact" element={<Contact />} />
+                  <Route path="track-order" element={<OrderTracking />} />
+                  <Route path="about" element={<About />} />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
               </Routes>
             </CartProvider>
           </AuthProvider>
