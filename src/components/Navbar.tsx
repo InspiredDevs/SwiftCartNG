@@ -1,13 +1,20 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { ShoppingCart, Menu, X, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { getCartCount } = useCart();
+  const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
@@ -34,9 +41,20 @@ const Navbar = () => {
             <Link to="/track-order" className="text-foreground hover:text-primary transition-colors">
               Track Order
             </Link>
-            <Link to="/auth/login" className="text-foreground hover:text-primary transition-colors">
-              Login
-            </Link>
+            {user ? (
+              <Button 
+                variant="ghost" 
+                onClick={handleSignOut}
+                className="text-foreground hover:text-primary transition-colors"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            ) : (
+              <Link to="/auth/login" className="text-foreground hover:text-primary transition-colors">
+                Login
+              </Link>
+            )}
             <ThemeToggle />
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="relative">
@@ -111,13 +129,24 @@ const Navbar = () => {
               >
                 Track Order
               </Link>
-              <Link
-                to="/auth/login"
-                className="text-foreground hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Login
-              </Link>
+              {user ? (
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSignOut}
+                  className="text-foreground hover:text-primary transition-colors justify-start p-0"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              ) : (
+                <Link
+                  to="/auth/login"
+                  className="text-foreground hover:text-primary transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login
+                </Link>
+              )}
               <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground">Theme:</span>
                 <ThemeToggle />
