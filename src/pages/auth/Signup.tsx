@@ -57,20 +57,21 @@ export default function Signup() {
         return;
       }
 
+      // Automatically sign in the user after signup
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError || !signInData.user) {
+        toast.error('Account created but failed to sign in. Please try logging in.');
+        navigate('/auth/login');
+        setLoading(false);
+        return;
+      }
+
       // If seller, create store entry
       if (accountType === 'seller') {
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (signInError || !signInData.user) {
-          toast.error('Account created but failed to sign in. Please try logging in.');
-          navigate('/auth/login');
-          setLoading(false);
-          return;
-        }
-
         const { error: storeError } = await supabase
           .from('seller_stores')
           .insert({
@@ -90,8 +91,8 @@ export default function Signup() {
         toast.success('Seller account created! Awaiting admin approval.');
         navigate('/seller/dashboard');
       } else {
-        toast.success('Account created successfully! You can now login.');
-        navigate('/auth/login');
+        toast.success('Account created successfully! Welcome to SwiftCart NG.');
+        navigate('/');
       }
     } catch (error) {
       console.error('Signup error:', error);
