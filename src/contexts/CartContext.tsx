@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { CartItem, Product } from "@/types/product";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CartContextType {
   cart: CartItem[];
@@ -15,7 +16,35 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
+
+  // Load cart from localStorage when user changes
+  useEffect(() => {
+    if (user?.id) {
+      const savedCart = localStorage.getItem(`cart_${user.id}`);
+      if (savedCart) {
+        try {
+          setCart(JSON.parse(savedCart));
+        } catch (error) {
+          console.error('Error loading cart:', error);
+          setCart([]);
+        }
+      } else {
+        setCart([]);
+      }
+    } else {
+      // User logged out, clear cart
+      setCart([]);
+    }
+  }, [user?.id]);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    if (user?.id && cart.length >= 0) {
+      localStorage.setItem(`cart_${user.id}`, JSON.stringify(cart));
+    }
+  }, [cart, user?.id]);
 
   const addToCart = (product: Product) => {
     setCart((prevCart) => {

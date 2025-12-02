@@ -128,10 +128,18 @@ const App = () => (
                   <Route path="shop" element={<Shop />} />
                   <Route path="product/:id" element={<ProductDetail />} />
                   <Route path="cart" element={<Cart />} />
-                  <Route path="checkout" element={<Checkout />} />
+                  <Route path="checkout" element={
+                    <ProtectedRoute requireAuth>
+                      <Checkout />
+                    </ProtectedRoute>
+                  } />
                   <Route path="order-confirmation" element={<OrderConfirmation />} />
                   <Route path="contact" element={<Contact />} />
-                  <Route path="track-order" element={<OrderTracking />} />
+                  <Route path="track-order" element={
+                    <ProtectedRoute requireAuth>
+                      <OrderTracking />
+                    </ProtectedRoute>
+                  } />
                   <Route path="about" element={<About />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
