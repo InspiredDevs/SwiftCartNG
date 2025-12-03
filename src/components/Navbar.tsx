@@ -38,9 +38,11 @@ const Navbar = () => {
             <Link to="/contact" className="text-foreground hover:text-primary transition-colors">
               Contact
             </Link>
-            <Link to="/track-order" className="text-foreground hover:text-primary transition-colors">
-              Track Order
-            </Link>
+            {user && (
+              <Link to="/track-order" className="text-foreground hover:text-primary transition-colors">
+                Track Order
+              </Link>
+            )}
             {user ? (
               <Button 
                 variant="ghost" 
@@ -122,13 +124,15 @@ const Navbar = () => {
               >
                 Contact
               </Link>
-              <Link
-                to="/track-order"
-                className="text-foreground hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Track Order
-              </Link>
+              {user && (
+                <Link
+                  to="/track-order"
+                  className="text-foreground hover:text-primary transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Track Order
+                </Link>
+              )}
               {user ? (
                 <Button 
                   variant="ghost" 
