@@ -1,31 +1,18 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Menu, X, LogOut } from "lucide-react";
+import { ShoppingCart, Menu, X, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
-import LogoutConfirmDialog from "./LogoutConfirmDialog";
 
 const Navbar = () => {
   const { getCartCount } = useCart();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-
-  const handleLogoutClick = () => {
-    setShowLogoutDialog(true);
-  };
-
-  const handleConfirmLogout = async () => {
-    setShowLogoutDialog(false);
-    await signOut();
-    setIsMenuOpen(false);
-  };
 
   return (
-    <>
-      <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
+    <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="text-2xl font-bold text-primary">
@@ -52,14 +39,10 @@ const Navbar = () => {
                 </Link>
               )}
               {user ? (
-                <Button 
-                  variant="ghost" 
-                  onClick={handleLogoutClick}
-                  className="text-foreground hover:text-primary transition-colors"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
+                <Link to="/profile" className="text-foreground hover:text-primary transition-colors flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  Profile
+                </Link>
               ) : (
                 <Link to="/auth/login" className="text-foreground hover:text-primary transition-colors">
                   Login
@@ -142,14 +125,14 @@ const Navbar = () => {
                   </Link>
                 )}
                 {user ? (
-                  <Button 
-                    variant="ghost" 
-                    onClick={handleLogoutClick}
-                    className="text-foreground hover:text-primary transition-colors justify-start p-0"
+                  <Link
+                    to="/profile"
+                    className="text-foreground hover:text-primary transition-colors flex items-center gap-1"
+                    onClick={() => setIsMenuOpen(false)}
                   >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </Button>
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Link>
                 ) : (
                   <Link
                     to="/auth/login"
@@ -167,14 +150,7 @@ const Navbar = () => {
             </div>
           )}
         </div>
-      </nav>
-
-      <LogoutConfirmDialog
-        open={showLogoutDialog}
-        onOpenChange={setShowLogoutDialog}
-        onConfirm={handleConfirmLogout}
-      />
-    </>
+    </nav>
   );
 };
 
