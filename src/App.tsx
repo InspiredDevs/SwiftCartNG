@@ -17,6 +17,7 @@ import OrderConfirmation from "./pages/OrderConfirmation";
 import Contact from "./pages/Contact";
 import OrderTracking from "./pages/OrderTracking";
 import About from "./pages/About";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import Dashboard from "./pages/admin/Dashboard";
@@ -138,6 +139,11 @@ const App = () => (
                   <Route path="track-order" element={
                     <ProtectedRoute requireAuth>
                       <OrderTracking />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="profile" element={
+                    <ProtectedRoute requireAuth>
+                      <Profile />
                     </ProtectedRoute>
                   } />
                   <Route path="about" element={<About />} />
