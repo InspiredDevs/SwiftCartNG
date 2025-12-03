@@ -144,10 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsSeller(false);
     setIsCustomer(false);
     setUserRole(null);
-    // Clear all user-specific data from localStorage
-    if (user?.id) {
-      localStorage.removeItem(`cart_${user.id}`);
-    }
+    // Cart is saved in DB, no need to clear it - it will be restored on next login
     navigate('/');
   };
 
