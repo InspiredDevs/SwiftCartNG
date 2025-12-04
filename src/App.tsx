@@ -32,6 +32,7 @@ import Signup from "./pages/auth/Signup";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
 import AddProduct from "./pages/seller/AddProduct";
+import PendingApproval from "./pages/seller/PendingApproval";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PendingProducts from "./pages/admin/PendingProducts";
 
@@ -104,24 +105,27 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 
-                {/* Seller Routes - With Navbar/Footer */}
-                <Route element={<LayoutWithNavbarAndFooter />}>
-                  <Route path="/seller/dashboard" element={
-                    <ProtectedRoute requireSeller>
-                      <SellerDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/seller/products" element={
-                    <ProtectedRoute requireSeller>
-                      <SellerProducts />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/seller/products/new" element={
-                    <ProtectedRoute requireSeller>
-                      <AddProduct />
-                    </ProtectedRoute>
-                  } />
-                </Route>
+                {/* Seller Routes - No Navbar/Footer */}
+                <Route path="/seller/pending-approval" element={
+                  <ProtectedRoute requireAuth>
+                    <PendingApproval />
+                  </ProtectedRoute>
+                } />
+                <Route path="/seller/dashboard" element={
+                  <ProtectedRoute requireSeller>
+                    <SellerDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/seller/products" element={
+                  <ProtectedRoute requireSeller>
+                    <SellerProducts />
+                  </ProtectedRoute>
+                } />
+                <Route path="/seller/products/new" element={
+                  <ProtectedRoute requireSeller>
+                    <AddProduct />
+                  </ProtectedRoute>
+                } />
                 
                 {/* Customer Routes - With Navbar/Footer */}
                 <Route element={<LayoutWithNavbarAndFooter />}>
@@ -137,12 +141,12 @@ const App = () => (
                   <Route path="order-confirmation" element={<OrderConfirmation />} />
                   <Route path="contact" element={<Contact />} />
                   <Route path="track-order" element={
-                    <ProtectedRoute requireAuth>
+                    <ProtectedRoute requireCustomer>
                       <OrderTracking />
                     </ProtectedRoute>
                   } />
                   <Route path="profile" element={
-                    <ProtectedRoute requireAuth>
+                    <ProtectedRoute requireCustomer>
                       <Profile />
                     </ProtectedRoute>
                   } />
