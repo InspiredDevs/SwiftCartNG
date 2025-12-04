@@ -8,8 +8,11 @@ import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { getCartCount } = useCart();
-  const { user } = useAuth();
+  const { user, isCustomer, isSeller, isAdmin } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Only show customer-specific links to customers (not sellers/admins)
+  const showCustomerLinks = !user || isCustomer;
 
   return (
     <nav className="sticky top-0 z-50 bg-background border-b border-border shadow-sm">
@@ -27,22 +30,38 @@ const Navbar = () => {
               <Link to="/shop" className="text-foreground hover:text-primary transition-colors">
                 Shop
               </Link>
-              <Link to="/about" className="text-foreground hover:text-primary transition-colors">
-                About
-              </Link>
-              <Link to="/contact" className="text-foreground hover:text-primary transition-colors">
-                Contact
-              </Link>
-              {user && (
+              {showCustomerLinks && (
+                <>
+                  <Link to="/about" className="text-foreground hover:text-primary transition-colors">
+                    About
+                  </Link>
+                  <Link to="/contact" className="text-foreground hover:text-primary transition-colors">
+                    Contact
+                  </Link>
+                </>
+              )}
+              {user && isCustomer && (
                 <Link to="/track-order" className="text-foreground hover:text-primary transition-colors">
                   Track Order
                 </Link>
               )}
               {user ? (
-                <Link to="/profile" className="text-foreground hover:text-primary transition-colors flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  Profile
-                </Link>
+                isCustomer ? (
+                  <Link to="/profile" className="text-foreground hover:text-primary transition-colors flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Link>
+                ) : isSeller ? (
+                  <Link to="/seller/dashboard" className="text-foreground hover:text-primary transition-colors flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    Dashboard
+                  </Link>
+                ) : isAdmin ? (
+                  <Link to="/admin/dashboard" className="text-foreground hover:text-primary transition-colors flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    Admin
+                  </Link>
+                ) : null
               ) : (
                 <Link to="/auth/login" className="text-foreground hover:text-primary transition-colors">
                   Login
@@ -101,21 +120,25 @@ const Navbar = () => {
                 >
                   Shop
                 </Link>
-                <Link
-                  to="/about"
-                  className="text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  About
-                </Link>
-                <Link
-                  to="/contact"
-                  className="text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Contact
-                </Link>
-                {user && (
+                {showCustomerLinks && (
+                  <>
+                    <Link
+                      to="/about"
+                      className="text-foreground hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      About
+                    </Link>
+                    <Link
+                      to="/contact"
+                      className="text-foreground hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Contact
+                    </Link>
+                  </>
+                )}
+                {user && isCustomer && (
                   <Link
                     to="/track-order"
                     className="text-foreground hover:text-primary transition-colors"
@@ -125,14 +148,34 @@ const Navbar = () => {
                   </Link>
                 )}
                 {user ? (
-                  <Link
-                    to="/profile"
-                    className="text-foreground hover:text-primary transition-colors flex items-center gap-1"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <User className="h-4 w-4" />
-                    Profile
-                  </Link>
+                  isCustomer ? (
+                    <Link
+                      to="/profile"
+                      className="text-foreground hover:text-primary transition-colors flex items-center gap-1"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="h-4 w-4" />
+                      Profile
+                    </Link>
+                  ) : isSeller ? (
+                    <Link
+                      to="/seller/dashboard"
+                      className="text-foreground hover:text-primary transition-colors flex items-center gap-1"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  ) : isAdmin ? (
+                    <Link
+                      to="/admin/dashboard"
+                      className="text-foreground hover:text-primary transition-colors flex items-center gap-1"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="h-4 w-4" />
+                      Admin
+                    </Link>
+                  ) : null
                 ) : (
                   <Link
                     to="/auth/login"

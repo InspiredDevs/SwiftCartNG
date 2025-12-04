@@ -10,6 +10,7 @@ interface AuthContextType {
   isSeller: boolean;
   isCustomer: boolean;
   userRole: 'admin' | 'seller' | 'customer' | null;
+  sellerStatus: 'pending' | 'approved' | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, role?: 'customer' | 'seller') => Promise<{ error: any }>;
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSeller, setIsSeller] = useState(false);
   const [isCustomer, setIsCustomer] = useState(false);
   const [userRole, setUserRole] = useState<'admin' | 'seller' | 'customer' | null>(null);
+  const [sellerStatus, setSellerStatus] = useState<'pending' | 'approved' | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -38,13 +40,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Check admin role after state change
         if (session?.user) {
           setTimeout(() => {
-            checkAdminRole(session.user.id);
+            checkUserRoleAndStatus(session.user.id);
           }, 0);
         } else {
-          setIsAdmin(false);
-          setIsSeller(false);
-          setIsCustomer(false);
-          setUserRole(null);
+          resetAuthState();
         }
       }
     );
@@ -55,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        checkAdminRole(session.user.id);
+        checkUserRoleAndStatus(session.user.id);
       } else {
         setLoading(false);
       }
@@ -64,31 +63,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminRole = async (userId: string) => {
+  const resetAuthState = () => {
+    setIsAdmin(false);
+    setIsSeller(false);
+    setIsCustomer(false);
+    setUserRole(null);
+    setSellerStatus(null);
+  };
+
+  const checkUserRoleAndStatus = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Get user role
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (data) {
-        setUserRole(data.role as 'admin' | 'seller' | 'customer');
-        setIsAdmin(data.role === 'admin');
-        setIsSeller(data.role === 'seller');
-        setIsCustomer(data.role === 'customer');
+      if (roleError) {
+        console.error('Error checking user role:', roleError);
+      }
+
+      if (roleData) {
+        const role = roleData.role as 'admin' | 'seller' | 'customer';
+        setUserRole(role);
+        setIsAdmin(role === 'admin');
+        setIsSeller(role === 'seller');
+        setIsCustomer(role === 'customer');
+
+        // If seller, check approval status
+        if (role === 'seller') {
+          const { data: storeData } = await supabase
+            .from('seller_stores')
+            .select('is_approved')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          if (storeData) {
+            setSellerStatus(storeData.is_approved ? 'approved' : 'pending');
+          } else {
+            setSellerStatus('pending');
+          }
+        } else {
+          setSellerStatus(null);
+        }
       } else {
-        setUserRole(null);
-        setIsAdmin(false);
-        setIsSeller(false);
-        setIsCustomer(false);
+        resetAuthState();
       }
     } catch (error) {
       console.error('Error checking user role:', error);
-      setUserRole(null);
-      setIsAdmin(false);
-      setIsSeller(false);
-      setIsCustomer(false);
+      resetAuthState();
     } finally {
       setLoading(false);
     }
@@ -111,7 +135,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (roleData?.role === 'admin') {
         navigate('/admin/dashboard');
       } else if (roleData?.role === 'seller') {
-        navigate('/seller/dashboard');
+        // Check seller approval status
+        const { data: storeData } = await supabase
+          .from('seller_stores')
+          .select('is_approved')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (storeData?.is_approved) {
+          navigate('/seller/dashboard');
+        } else {
+          navigate('/seller/pending-approval');
+        }
       } else {
         navigate('/');
       }
@@ -140,16 +175,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setIsAdmin(false);
-    setIsSeller(false);
-    setIsCustomer(false);
-    setUserRole(null);
-    // Cart is saved in DB, no need to clear it - it will be restored on next login
+    resetAuthState();
     navigate('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, isSeller, isCustomer, userRole, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      isAdmin, 
+      isSeller, 
+      isCustomer, 
+      userRole, 
+      sellerStatus,
+      loading, 
+      signIn, 
+      signUp, 
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
