@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, ShoppingBag, AlertCircle, CheckCircle } from 'lucide-react';
+import { Package, ShoppingBag, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import Navbar from '@/components/Navbar';
+import SellerHeader from '@/components/seller/SellerHeader';
 import Footer from '@/components/Footer';
 
 interface SellerStore {
@@ -16,10 +16,18 @@ interface SellerStore {
   is_approved: boolean;
 }
 
+interface ProductStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+}
+
 export default function SellerDashboard() {
   const { user, isSeller, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [store, setStore] = useState<SellerStore | null>(null);
+  const [stats, setStats] = useState<ProductStats>({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,6 +39,7 @@ export default function SellerDashboard() {
   useEffect(() => {
     if (user && isSeller) {
       fetchStoreInfo();
+      fetchProductStats();
     }
   }, [user, isSeller]);
 
@@ -52,6 +61,27 @@ export default function SellerDashboard() {
     }
   };
 
+  const fetchProductStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('status')
+        .eq('seller_id', user?.id);
+
+      if (error) throw error;
+
+      const products = data || [];
+      setStats({
+        total: products.length,
+        pending: products.filter(p => p.status === 'pending').length,
+        approved: products.filter(p => p.status === 'approved').length,
+        rejected: products.filter(p => p.status === 'rejected').length,
+      });
+    } catch (error) {
+      console.error('Error fetching product stats:', error);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -61,8 +91,8 @@ export default function SellerDashboard() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
+    <div className="min-h-screen flex flex-col bg-background">
+      <SellerHeader />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div>
@@ -99,6 +129,34 @@ export default function SellerDashboard() {
               </CardHeader>
             </Card>
           )}
+
+          {/* Product Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold">{stats.total}</div>
+                <p className="text-xs text-muted-foreground">Total Products</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                <p className="text-xs text-muted-foreground">Pending Approval</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
+                <p className="text-xs text-muted-foreground">Approved</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+                <p className="text-xs text-muted-foreground">Rejected</p>
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
@@ -149,13 +207,6 @@ export default function SellerDashboard() {
                   onClick={() => navigate('/seller/products')}
                 >
                   View My Products
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate('/seller/profile')}
-                >
-                  Edit Store Profile
                 </Button>
               </CardContent>
             </Card>
