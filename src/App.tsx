@@ -33,8 +33,10 @@ import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
 import AddProduct from "./pages/seller/AddProduct";
 import PendingApproval from "./pages/seller/PendingApproval";
+import SellerSupport from "./pages/seller/Support";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PendingProducts from "./pages/admin/PendingProducts";
+import SupportTickets from "./pages/admin/SupportTickets";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +106,11 @@ const App = () => (
                     <PendingProducts />
                   </ProtectedRoute>
                 } />
+                <Route path="/admin/support-tickets" element={
+                  <ProtectedRoute requireAdmin>
+                    <SupportTickets />
+                  </ProtectedRoute>
+                } />
                 
                 {/* Seller Routes - No Navbar/Footer */}
                 <Route path="/seller/pending-approval" element={
@@ -124,6 +131,11 @@ const App = () => (
                 <Route path="/seller/products/new" element={
                   <ProtectedRoute requireSeller>
                     <AddProduct />
+                  </ProtectedRoute>
+                } />
+                <Route path="/seller/support" element={
+                  <ProtectedRoute requireSeller>
+                    <SellerSupport />
                   </ProtectedRoute>
                 } />
                 

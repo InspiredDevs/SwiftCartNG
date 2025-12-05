@@ -303,6 +303,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_support_tickets: {
+        Row: {
+          admin_reply: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          message: string
+          seller_email: string
+          seller_id: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          admin_reply?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          message: string
+          seller_email: string
+          seller_id: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          admin_reply?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          message?: string
+          seller_email?: string
+          seller_id?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
