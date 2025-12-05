@@ -14,6 +14,7 @@ import {
   Mail,
   Store,
   Clock,
+  HeadphonesIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -46,6 +47,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { icon: Users, label: 'Customers', path: '/admin/customers' },
     { icon: Store, label: 'Sellers', path: '/admin/sellers' },
     { icon: Mail, label: 'Messages', path: '/admin/messages' },
+    { icon: HeadphonesIcon, label: 'Support Tickets', path: '/admin/support-tickets' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 

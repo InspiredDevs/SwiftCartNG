@@ -13,6 +13,15 @@ const About = () => {
             Nigeria's premier destination for fast, affordable tech gadgets and fashion accessories
           </p>
 
+          {/* Team/Office Image */}
+          <div className="mb-12">
+            <img
+              src="https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
+              alt="SwiftCart NG Team - Modern e-commerce collaboration"
+              className="w-full h-64 md:h-80 object-cover rounded-xl shadow-lg"
+            />
+          </div>
+
           <div className="prose prose-lg max-w-none mb-12">
             <p className="text-lg leading-relaxed text-muted-foreground">
               SwiftCart NG is a fast and affordable Nigerian online store dedicated to bringing you the latest tech gadgets and fashion accessories from around the globe. We source high-quality products internationally to ensure you get the best value for your money, delivered right to your doorstep.
