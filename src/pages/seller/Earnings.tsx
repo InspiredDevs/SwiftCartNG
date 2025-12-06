@@ -5,7 +5,7 @@ import SellerHeader from '@/components/seller/SellerHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, Package } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface EarningItem {
@@ -13,6 +13,7 @@ interface EarningItem {
   orderCode: string;
   productName: string;
   amount: number;
+  quantity: number;
   date: string;
   status: string;
 }
@@ -23,7 +24,8 @@ export default function Earnings() {
   const [loading, setLoading] = useState(true);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [pendingEarnings, setPendingEarnings] = useState(0);
-  const [paidOut, setPaidOut] = useState(0);
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [totalProductsSold, setTotalProductsSold] = useState(0);
 
   useEffect(() => {
     if (user?.id) {
@@ -33,11 +35,12 @@ export default function Earnings() {
 
   const fetchEarnings = async () => {
     try {
-      // First get seller's products
+      // Get seller's APPROVED products only
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select('name')
-        .eq('seller_id', user?.id);
+        .eq('seller_id', user?.id)
+        .eq('status', 'approved');
 
       if (productsError) throw productsError;
 
@@ -48,7 +51,7 @@ export default function Earnings() {
 
       const productNames = products.map(p => p.name);
 
-      // Get order items for seller's products
+      // Get order items for seller's approved products
       const { data: orderItems, error: orderItemsError } = await supabase
         .from('order_items')
         .select(`
@@ -88,25 +91,36 @@ export default function Earnings() {
           orderCode: order?.order_code || 'N/A',
           productName: item.product_name,
           amount: Number(item.subtotal),
+          quantity: item.quantity,
           date: order?.created_at || '',
           status: order?.status || 'Unknown'
         };
       });
 
-      // Calculate totals
+      // Calculate totals based on order status
+      // Completed statuses: "Delivered", "completed", "paid" (case-insensitive check)
+      // Pending statuses: "Pending", "Dispatched", "Processing"
+      // Commission: 0% for now (TODO: implement commission logic later)
+      const COMMISSION_RATE = 0; // 0% commission - will be handled later
+      
       let total = 0;
       let pending = 0;
-      let paid = 0;
+      let productsSold = 0;
 
       earningsList.forEach(item => {
-        if (item.status === 'Delivered') {
-          total += item.amount;
-          // For now, treat all delivered as pending payout (no payout tracking yet)
-          pending += item.amount;
-        } else if (item.status === 'Paid') {
-          total += item.amount;
-          paid += item.amount;
+        const status = item.status.toLowerCase();
+        const earningsAfterCommission = item.amount * (1 - COMMISSION_RATE);
+        
+        if (status === 'delivered' || status === 'completed' || status === 'paid') {
+          // Completed orders count towards total earnings
+          total += earningsAfterCommission;
+          productsSold += item.quantity;
+        } else if (status === 'pending' || status === 'dispatched' || status === 'processing') {
+          // Orders in progress count as pending earnings
+          pending += earningsAfterCommission;
+          productsSold += item.quantity;
         }
+        // Cancelled/rejected orders are not counted
       });
 
       setEarnings(earningsList.sort((a, b) => 
@@ -114,7 +128,8 @@ export default function Earnings() {
       ));
       setTotalEarnings(total);
       setPendingEarnings(pending);
-      setPaidOut(paid);
+      setAvailableBalance(total); // Available balance = total earnings (no withdrawals yet)
+      setTotalProductsSold(productsSold);
     } catch (error) {
       console.error('Error fetching earnings:', error);
     } finally {
@@ -130,15 +145,21 @@ export default function Earnings() {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Delivered':
+    const lowerStatus = status.toLowerCase();
+    switch (lowerStatus) {
+      case 'delivered':
+      case 'completed':
         return <Badge className="bg-green-500">Delivered</Badge>;
-      case 'Dispatched':
+      case 'dispatched':
         return <Badge className="bg-blue-500">Dispatched</Badge>;
-      case 'Pending':
+      case 'pending':
         return <Badge variant="secondary">Pending</Badge>;
-      case 'Paid':
+      case 'paid':
         return <Badge className="bg-emerald-600">Paid</Badge>;
+      case 'processing':
+        return <Badge className="bg-orange-500">Processing</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Cancelled</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -152,7 +173,7 @@ export default function Earnings() {
         <h1 className="text-3xl font-bold mb-8">Earnings</h1>
 
         {/* Summary Cards */}
-        <div className="grid gap-4 md:grid-cols-3 mb-8">
+        <div className="grid gap-4 md:grid-cols-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
@@ -162,33 +183,46 @@ export default function Earnings() {
               <div className="text-2xl font-bold text-green-600">
                 {formatCurrency(totalEarnings)}
               </div>
-              <p className="text-xs text-muted-foreground">From delivered orders</p>
+              <p className="text-xs text-muted-foreground">From completed orders</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Payout</CardTitle>
+              <CardTitle className="text-sm font-medium">Pending Earnings</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
                 {formatCurrency(pendingEarnings)}
               </div>
-              <p className="text-xs text-muted-foreground">Awaiting payout</p>
+              <p className="text-xs text-muted-foreground">Orders in progress</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Paid Out</CardTitle>
+              <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-emerald-600">
-                {formatCurrency(paidOut)}
+                {formatCurrency(availableBalance)}
               </div>
-              <p className="text-xs text-muted-foreground">Successfully paid</p>
+              <p className="text-xs text-muted-foreground">Ready for withdrawal</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Products Sold</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                {totalProductsSold}
+              </div>
+              <p className="text-xs text-muted-foreground">Total units sold</p>
             </CardContent>
           </Card>
         </div>
@@ -210,6 +244,7 @@ export default function Earnings() {
                     <TableRow>
                       <TableHead>Order ID</TableHead>
                       <TableHead>Product</TableHead>
+                      <TableHead>Qty</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Status</TableHead>
@@ -220,6 +255,7 @@ export default function Earnings() {
                       <TableRow key={`${item.orderId}-${index}`}>
                         <TableCell className="font-mono text-sm">{item.orderCode}</TableCell>
                         <TableCell className="max-w-[200px] truncate">{item.productName}</TableCell>
+                        <TableCell>{item.quantity}</TableCell>
                         <TableCell className="font-medium">{formatCurrency(item.amount)}</TableCell>
                         <TableCell>
                           {item.date ? format(new Date(item.date), 'MMM d, yyyy') : 'N/A'}
