@@ -7,7 +7,6 @@ import { Package, ShoppingBag, AlertCircle, CheckCircle, Clock } from 'lucide-re
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SellerHeader from '@/components/seller/SellerHeader';
-import Footer from '@/components/Footer';
 
 interface SellerStore {
   id: string;
@@ -231,7 +230,6 @@ export default function SellerDashboard() {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

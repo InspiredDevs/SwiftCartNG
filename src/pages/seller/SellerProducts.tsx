@@ -8,7 +8,6 @@ import { Plus, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SellerHeader from '@/components/seller/SellerHeader';
-import Footer from '@/components/Footer';
 
 interface SellerProduct {
   id: string;
@@ -187,7 +186,6 @@ export default function SellerProducts() {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

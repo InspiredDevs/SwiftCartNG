@@ -11,7 +11,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ArrowLeft, Upload, Loader2, X, ImagePlus } from 'lucide-react';
 import SellerHeader from '@/components/seller/SellerHeader';
-import Footer from '@/components/Footer';
 
 export default function AddProduct() {
   const { user } = useAuth();
@@ -271,7 +270,6 @@ export default function AddProduct() {
           </Card>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }
