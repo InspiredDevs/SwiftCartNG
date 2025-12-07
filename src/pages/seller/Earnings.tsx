@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import SellerHeader from '@/components/seller/SellerHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, Clock, CheckCircle, Package } from 'lucide-react';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DollarSign, Clock, CheckCircle, Package, CalendarIcon } from 'lucide-react';
+import { format, subDays, startOfMonth, endOfMonth, subMonths, startOfYear, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 
 interface EarningItem {
   orderId: string;
@@ -18,20 +24,87 @@ interface EarningItem {
   status: string;
 }
 
+type DatePreset = 'all' | 'today' | 'last7days' | 'last30days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'custom';
+
 export default function Earnings() {
   const { user } = useAuth();
-  const [earnings, setEarnings] = useState<EarningItem[]>([]);
+  const [allEarnings, setAllEarnings] = useState<EarningItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalEarnings, setTotalEarnings] = useState(0);
-  const [pendingEarnings, setPendingEarnings] = useState(0);
-  const [availableBalance, setAvailableBalance] = useState(0);
-  const [totalProductsSold, setTotalProductsSold] = useState(0);
+  const [datePreset, setDatePreset] = useState<DatePreset>('all');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
     if (user?.id) {
       fetchEarnings();
     }
   }, [user?.id]);
+
+  // Calculate date range based on preset
+  const getDateRangeFromPreset = (preset: DatePreset): { from: Date; to: Date } | null => {
+    const today = new Date();
+    switch (preset) {
+      case 'today':
+        return { from: startOfDay(today), to: endOfDay(today) };
+      case 'last7days':
+        return { from: startOfDay(subDays(today, 6)), to: endOfDay(today) };
+      case 'last30days':
+        return { from: startOfDay(subDays(today, 29)), to: endOfDay(today) };
+      case 'thisMonth':
+        return { from: startOfMonth(today), to: endOfMonth(today) };
+      case 'lastMonth':
+        const lastMonth = subMonths(today, 1);
+        return { from: startOfMonth(lastMonth), to: endOfMonth(lastMonth) };
+      case 'thisYear':
+        return { from: startOfYear(today), to: endOfDay(today) };
+      case 'custom':
+        if (dateRange?.from && dateRange?.to) {
+          return { from: startOfDay(dateRange.from), to: endOfDay(dateRange.to) };
+        }
+        return null;
+      default:
+        return null;
+    }
+  };
+
+  // Filter earnings based on date range
+  const filteredEarnings = useMemo(() => {
+    const range = getDateRangeFromPreset(datePreset);
+    if (!range) return allEarnings;
+
+    return allEarnings.filter(item => {
+      if (!item.date) return false;
+      const itemDate = new Date(item.date);
+      return isWithinInterval(itemDate, { start: range.from, end: range.to });
+    });
+  }, [allEarnings, datePreset, dateRange]);
+
+  // Calculate totals from filtered earnings
+  const { totalEarnings, pendingEarnings, availableBalance, totalProductsSold } = useMemo(() => {
+    const COMMISSION_RATE = 0; // 0% commission - will be handled later
+    let total = 0;
+    let pending = 0;
+    let productsSold = 0;
+
+    filteredEarnings.forEach(item => {
+      const status = item.status.toLowerCase();
+      const earningsAfterCommission = item.amount * (1 - COMMISSION_RATE);
+      
+      if (status === 'delivered' || status === 'completed' || status === 'paid') {
+        total += earningsAfterCommission;
+        productsSold += item.quantity;
+      } else if (status === 'pending' || status === 'dispatched' || status === 'processing') {
+        pending += earningsAfterCommission;
+        productsSold += item.quantity;
+      }
+    });
+
+    return {
+      totalEarnings: total,
+      pendingEarnings: pending,
+      availableBalance: total,
+      totalProductsSold: productsSold
+    };
+  }, [filteredEarnings]);
 
   const fetchEarnings = async () => {
     try {
@@ -97,44 +170,27 @@ export default function Earnings() {
         };
       });
 
-      // Calculate totals based on order status
-      // Completed statuses: "Delivered", "completed", "paid" (case-insensitive check)
-      // Pending statuses: "Pending", "Dispatched", "Processing"
-      // Commission: 0% for now (TODO: implement commission logic later)
-      const COMMISSION_RATE = 0; // 0% commission - will be handled later
-      
-      let total = 0;
-      let pending = 0;
-      let productsSold = 0;
-
-      earningsList.forEach(item => {
-        const status = item.status.toLowerCase();
-        const earningsAfterCommission = item.amount * (1 - COMMISSION_RATE);
-        
-        if (status === 'delivered' || status === 'completed' || status === 'paid') {
-          // Completed orders count towards total earnings
-          total += earningsAfterCommission;
-          productsSold += item.quantity;
-        } else if (status === 'pending' || status === 'dispatched' || status === 'processing') {
-          // Orders in progress count as pending earnings
-          pending += earningsAfterCommission;
-          productsSold += item.quantity;
-        }
-        // Cancelled/rejected orders are not counted
-      });
-
-      setEarnings(earningsList.sort((a, b) => 
+      setAllEarnings(earningsList.sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       ));
-      setTotalEarnings(total);
-      setPendingEarnings(pending);
-      setAvailableBalance(total); // Available balance = total earnings (no withdrawals yet)
-      setTotalProductsSold(productsSold);
     } catch (error) {
       console.error('Error fetching earnings:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePresetChange = (value: DatePreset) => {
+    setDatePreset(value);
+    if (value !== 'custom') {
+      setDateRange(undefined);
+    }
+  };
+
+  const getDateRangeLabel = () => {
+    const range = getDateRangeFromPreset(datePreset);
+    if (!range) return 'All Time';
+    return `${format(range.from, 'MMM d, yyyy')} - ${format(range.to, 'MMM d, yyyy')}`;
   };
 
   const formatCurrency = (amount: number) => {
@@ -170,7 +226,72 @@ export default function Earnings() {
       <SellerHeader />
       
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Earnings</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <h1 className="text-3xl font-bold">Earnings</h1>
+          
+          {/* Date Range Filter */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Select value={datePreset} onValueChange={(value) => handlePresetChange(value as DatePreset)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="last7days">Last 7 Days</SelectItem>
+                <SelectItem value="last30days">Last 30 Days</SelectItem>
+                <SelectItem value="thisMonth">This Month</SelectItem>
+                <SelectItem value="lastMonth">Last Month</SelectItem>
+                <SelectItem value="thisYear">This Year</SelectItem>
+                <SelectItem value="custom">Custom Range</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {datePreset === 'custom' && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[280px] justify-start text-left font-normal",
+                      !dateRange && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "MMM d, yyyy")} - {format(dateRange.to, "MMM d, yyyy")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "MMM d, yyyy")
+                      )
+                    ) : (
+                      <span>Pick a date range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={2}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
+        </div>
+
+        {datePreset !== 'all' && (
+          <p className="text-sm text-muted-foreground mb-4">
+            Showing earnings for: {getDateRangeLabel()}
+          </p>
+        )}
 
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-4 mb-8">
@@ -235,8 +356,12 @@ export default function Earnings() {
           <CardContent>
             {loading ? (
               <p className="text-center py-8 text-muted-foreground">Loading earnings...</p>
-            ) : earnings.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No earnings yet. Start selling to see your earnings here.</p>
+            ) : filteredEarnings.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground">
+                {allEarnings.length === 0 
+                  ? "No earnings yet. Start selling to see your earnings here."
+                  : "No earnings found for the selected date range."}
+              </p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -251,7 +376,7 @@ export default function Earnings() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {earnings.map((item, index) => (
+                    {filteredEarnings.map((item, index) => (
                       <TableRow key={`${item.orderId}-${index}`}>
                         <TableCell className="font-mono text-sm">{item.orderCode}</TableCell>
                         <TableCell className="max-w-[200px] truncate">{item.productName}</TableCell>
