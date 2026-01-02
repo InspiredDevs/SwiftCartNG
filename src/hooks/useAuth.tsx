@@ -125,16 +125,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     
     if (!error && data.user) {
-      // Check user role and redirect accordingly
+      // Check user role and redirect accordingly BEFORE updating state
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', data.user.id)
         .maybeSingle();
       
-      if (roleData?.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else if (roleData?.role === 'seller') {
+      const role = roleData?.role;
+      
+      // Update state immediately based on fetched role
+      if (role) {
+        setUserRole(role as 'admin' | 'seller' | 'customer');
+        setIsAdmin(role === 'admin');
+        setIsSeller(role === 'seller');
+        setIsCustomer(role === 'customer');
+      }
+      
+      // Navigate based on role - admin gets priority redirect
+      if (role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (role === 'seller') {
         // Check seller approval status
         const { data: storeData } = await supabase
           .from('seller_stores')
@@ -142,13 +153,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('user_id', data.user.id)
           .maybeSingle();
 
+        setSellerStatus(storeData?.is_approved ? 'approved' : 'pending');
+        
         if (storeData?.is_approved) {
-          navigate('/seller/dashboard');
+          navigate('/seller/dashboard', { replace: true });
         } else {
-          navigate('/seller/pending-approval');
+          navigate('/seller/pending-approval', { replace: true });
         }
       } else {
-        navigate('/');
+        navigate('/', { replace: true });
       }
     }
     

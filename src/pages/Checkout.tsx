@@ -1,18 +1,27 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { generateOrderCode } from "@/lib/utils";
+import { User } from "lucide-react";
+
+interface ProfileData {
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+}
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cart, getCartTotal, clearCart } = useCart();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -20,7 +29,50 @@ const Checkout = () => {
     address: "",
     paymentMethod: "paystack",
   });
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  // Fetch profile data for logged-in users
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      
+      setLoadingProfile(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name, email, phone')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('Error fetching profile:', error);
+        } else if (data) {
+          setProfileData(data);
+          // Pre-fill form with profile data
+          setFormData(prev => ({
+            ...prev,
+            name: data.full_name || '',
+            email: data.email || user.email || '',
+            phone: data.phone || '',
+          }));
+        } else {
+          // If no profile, at least use user email
+          setFormData(prev => ({
+            ...prev,
+            email: user.email || '',
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   const formatPrice = (price: number) => {
     return `₦${price.toLocaleString()}`;
@@ -100,6 +152,9 @@ const Checkout = () => {
     return null;
   }
 
+  const isLoggedIn = !!user;
+  const hasProfileData = profileData && (profileData.full_name || profileData.phone);
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-4xl">
@@ -112,53 +167,105 @@ const Checkout = () => {
               <div className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-xl font-semibold mb-6">Customer Information</h2>
                 
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      placeholder="Enter your full name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                    />
+                {loadingProfile ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="text-muted-foreground">Loading profile...</div>
                   </div>
+                ) : isLoggedIn && hasProfileData ? (
+                  // Read-only display for logged-in users with profile data
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                      <User className="h-4 w-4" />
+                      <span>Using your saved profile information</span>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <Label className="text-xs text-muted-foreground">Full Name</Label>
+                        <p className="font-medium">{profileData.full_name || 'Not provided'}</p>
+                      </div>
+                      
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <Label className="text-xs text-muted-foreground">Email</Label>
+                        <p className="font-medium">{profileData.email || user?.email || 'Not provided'}</p>
+                      </div>
+                      
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <Label className="text-xs text-muted-foreground">Phone Number</Label>
+                        <p className="font-medium">{profileData.phone || 'Not provided'}</p>
+                      </div>
+                    </div>
+                    
+                    <Link 
+                      to="/profile" 
+                      className="inline-flex items-center text-sm text-primary hover:underline mt-2"
+                    >
+                      Edit Profile
+                    </Link>
+                    
+                    {/* Delivery address still needs to be entered */}
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <Label htmlFor="address">Delivery Address *</Label>
+                      <Textarea
+                        id="address"
+                        placeholder="Enter your complete delivery address"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        rows={4}
+                        required
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  // Full form for guests or users without profile data
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        placeholder="Enter your full name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                      />
+                    </div>
 
-                  <div>
-                    <Label htmlFor="email">Email (Optional)</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    />
-                  </div>
+                    <div>
+                      <Label htmlFor="email">Email (Optional)</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      />
+                    </div>
 
-                  <div>
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+234 800 000 0000"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      required
-                    />
-                  </div>
+                    <div>
+                      <Label htmlFor="phone">Phone Number *</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="+234 800 000 0000"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        required
+                      />
+                    </div>
 
-                  <div>
-                    <Label htmlFor="address">Delivery Address *</Label>
-                    <Textarea
-                      id="address"
-                      placeholder="Enter your complete delivery address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      rows={4}
-                      required
-                    />
+                    <div>
+                      <Label htmlFor="address">Delivery Address *</Label>
+                      <Textarea
+                        id="address"
+                        placeholder="Enter your complete delivery address"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        rows={4}
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="bg-card border border-border rounded-lg p-6">
