@@ -183,12 +183,12 @@ const OrderConfirmation = () => {
               Continue Shopping
             </Button>
             <Button
-              onClick={() => navigate("/my-orders")}
+              onClick={() => navigate(`/my-orders?orderId=${orderId}`)}
               variant="outline"
               className="flex-1"
               size="lg"
             >
-              My Orders
+              Track Order
             </Button>
           </div>
         </div>

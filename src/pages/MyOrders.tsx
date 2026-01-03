@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Package, ChevronRight, Copy, Check, Clock, Truck, CheckCircle, XCircle, CreditCard } from "lucide-react";
@@ -28,9 +28,10 @@ interface Order {
 
 const MyOrders = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(searchParams.get('orderId'));
   const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
