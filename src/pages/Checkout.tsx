@@ -264,8 +264,11 @@ const Checkout = () => {
                     </div>
                   </div>
                 ) : (
-                  // Full form for guests or users without profile data
+                  // Form for users without complete profile data
                   <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Please complete your profile information to continue with checkout.
+                    </p>
                     <div>
                       <Label htmlFor="name">Full Name *</Label>
                       <Input
@@ -277,15 +280,9 @@ const Checkout = () => {
                       />
                     </div>
 
-                    <div>
-                      <Label htmlFor="email">Email (Optional)</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <Label className="text-xs text-muted-foreground">Email</Label>
+                      <p className="font-medium">{user?.email || 'Not provided'}</p>
                     </div>
 
                     <div>
