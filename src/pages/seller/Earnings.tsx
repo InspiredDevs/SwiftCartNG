@@ -89,13 +89,17 @@ export default function Earnings() {
       const status = item.status.toLowerCase();
       const earningsAfterCommission = item.amount * (1 - COMMISSION_RATE);
       
-      if (status === 'delivered' || status === 'completed' || status === 'paid') {
+      // Completed orders: delivered or paid
+      if (status === 'delivered' || status === 'paid') {
         total += earningsAfterCommission;
         productsSold += item.quantity;
-      } else if (status === 'pending' || status === 'dispatched' || status === 'processing') {
+      } 
+      // Pending orders: pending or shipped (in transit)
+      else if (status === 'pending' || status === 'shipped') {
         pending += earningsAfterCommission;
         productsSold += item.quantity;
       }
+      // Cancelled orders are excluded from earnings
     });
 
     return {
@@ -204,16 +208,13 @@ export default function Earnings() {
     const lowerStatus = status.toLowerCase();
     switch (lowerStatus) {
       case 'delivered':
-      case 'completed':
         return <Badge className="bg-green-500">Delivered</Badge>;
-      case 'dispatched':
-        return <Badge className="bg-blue-500">Dispatched</Badge>;
+      case 'shipped':
+        return <Badge className="bg-purple-500">Shipped</Badge>;
       case 'pending':
         return <Badge variant="secondary">Pending</Badge>;
       case 'paid':
-        return <Badge className="bg-emerald-600">Paid</Badge>;
-      case 'processing':
-        return <Badge className="bg-orange-500">Processing</Badge>;
+        return <Badge className="bg-blue-500">Paid</Badge>;
       case 'cancelled':
         return <Badge variant="destructive">Cancelled</Badge>;
       default:

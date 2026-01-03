@@ -108,29 +108,43 @@ export default function OrderTracking() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Pending':
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'pending':
         return 'bg-yellow-500';
-      case 'Dispatched':
+      case 'paid':
         return 'bg-blue-500';
-      case 'Delivered':
+      case 'shipped':
+        return 'bg-purple-500';
+      case 'delivered':
         return 'bg-green-500';
+      case 'cancelled':
+        return 'bg-red-500';
       default:
         return 'bg-gray-500';
     }
   };
 
   const getStatusMessage = (status: string) => {
-    switch (status) {
-      case 'Pending':
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'pending':
         return 'Your order is being processed';
-      case 'Dispatched':
+      case 'paid':
+        return 'Payment confirmed, preparing your order';
+      case 'shipped':
         return 'Your order is on its way';
-      case 'Delivered':
+      case 'delivered':
         return 'Your order has been delivered';
+      case 'cancelled':
+        return 'This order has been cancelled';
       default:
         return 'Order status';
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
   };
 
   return (
@@ -233,7 +247,7 @@ export default function OrderTracking() {
                     </CardDescription>
                   </div>
                   <Badge className={getStatusColor(order.status)}>
-                    {order.status}
+                    {getStatusLabel(order.status)}
                   </Badge>
                 </div>
               </CardHeader>
