@@ -183,12 +183,12 @@ const OrderConfirmation = () => {
               Continue Shopping
             </Button>
             <Button
-              onClick={() => navigate("/track-order")}
+              onClick={() => navigate("/my-orders")}
               variant="outline"
               className="flex-1"
               size="lg"
             >
-              Track Order
+              My Orders
             </Button>
           </div>
         </div>
@@ -196,13 +196,12 @@ const OrderConfirmation = () => {
         {/* Additional Info */}
         <div className="mt-6 text-center text-sm text-muted-foreground">
           <p>
-            You can track your order status using your Order ID or phone number
-            on our{" "}
+            You can view and track your order status anytime from your{" "}
             <span
-              onClick={() => navigate("/track-order")}
+              onClick={() => navigate("/my-orders")}
               className="text-primary hover:underline cursor-pointer"
             >
-              Order Tracking
+              My Orders
             </span>{" "}
             page.
           </p>
