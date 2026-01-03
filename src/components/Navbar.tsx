@@ -41,8 +41,8 @@ const Navbar = () => {
                 </>
               )}
               {user && isCustomer && (
-                <Link to="/track-order" className="text-foreground hover:text-primary transition-colors">
-                  Track Order
+                <Link to="/my-orders" className="text-foreground hover:text-primary transition-colors">
+                  My Orders
                 </Link>
               )}
               {user ? (
@@ -140,11 +140,11 @@ const Navbar = () => {
                 )}
                 {user && isCustomer && (
                   <Link
-                    to="/track-order"
+                    to="/my-orders"
                     className="text-foreground hover:text-primary transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Track Order
+                    My Orders
                   </Link>
                 )}
                 {user ? (

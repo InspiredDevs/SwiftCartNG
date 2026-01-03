@@ -15,7 +15,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import Contact from "./pages/Contact";
-import OrderTracking from "./pages/OrderTracking";
+import MyOrders from "./pages/MyOrders";
 import About from "./pages/About";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -164,9 +164,9 @@ const App = () => (
                   } />
                   <Route path="order-confirmation" element={<OrderConfirmation />} />
                   <Route path="contact" element={<Contact />} />
-                  <Route path="track-order" element={
+                  <Route path="my-orders" element={
                     <ProtectedRoute requireCustomer>
-                      <OrderTracking />
+                      <MyOrders />
                     </ProtectedRoute>
                   } />
                   <Route path="profile" element={
