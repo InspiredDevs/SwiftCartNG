@@ -16,6 +16,7 @@ interface ProfileData {
   full_name: string | null;
   email: string | null;
   phone: string | null;
+  delivery_address: string | null;
 }
 
 const Checkout = () => {
@@ -32,6 +33,7 @@ const Checkout = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [useDifferentAddress, setUseDifferentAddress] = useState(false);
 
   // Fetch profile data for logged-in users
   useEffect(() => {
@@ -42,7 +44,7 @@ const Checkout = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name, email, phone')
+          .select('full_name, email, phone, delivery_address')
           .eq('id', user.id)
           .maybeSingle();
         
@@ -56,6 +58,7 @@ const Checkout = () => {
             name: data.full_name || '',
             email: data.email || user.email || '',
             phone: data.phone || '',
+            address: data.delivery_address || '',
           }));
         } else {
           // If no profile, at least use user email
@@ -81,7 +84,12 @@ const Checkout = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.phone || !formData.address) {
+    // Get the actual address to use
+    const addressToUse = (isLoggedIn && hasProfileData && profileData?.delivery_address && !useDifferentAddress) 
+      ? profileData.delivery_address 
+      : formData.address;
+    
+    if (!formData.name || !formData.phone || !addressToUse) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -99,7 +107,7 @@ const Checkout = () => {
           customer_name: formData.name,
           customer_email: formData.email || null,
           customer_phone: formData.phone,
-          delivery_address: formData.address,
+          delivery_address: addressToUse,
           total_amount: totalAmount,
           status: "Pending",
           order_code: orderCode,
@@ -153,7 +161,7 @@ const Checkout = () => {
   }
 
   const isLoggedIn = !!user;
-  const hasProfileData = profileData && (profileData.full_name || profileData.phone);
+  const hasProfileData = profileData && (profileData.full_name || profileData.phone || profileData.delivery_address);
 
   return (
     <div className="min-h-screen py-8">
@@ -203,17 +211,56 @@ const Checkout = () => {
                       Edit Profile
                     </Link>
                     
-                    {/* Delivery address still needs to be entered */}
+                    {/* Delivery address - show saved or allow entry */}
                     <div className="mt-4 pt-4 border-t border-border">
                       <Label htmlFor="address">Delivery Address *</Label>
-                      <Textarea
-                        id="address"
-                        placeholder="Enter your complete delivery address"
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        rows={4}
-                        required
-                      />
+                      {profileData.delivery_address ? (
+                        <div className="space-y-2">
+                          {!useDifferentAddress && (
+                            <div className="p-3 bg-muted/50 rounded-lg">
+                              <p className="font-medium whitespace-pre-wrap">{profileData.delivery_address}</p>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="use-different-address"
+                              className="rounded border-border"
+                              checked={useDifferentAddress}
+                              onChange={(e) => {
+                                setUseDifferentAddress(e.target.checked);
+                                if (!e.target.checked) {
+                                  setFormData(prev => ({ ...prev, address: profileData.delivery_address || '' }));
+                                } else {
+                                  setFormData(prev => ({ ...prev, address: '' }));
+                                }
+                              }}
+                            />
+                            <Label htmlFor="use-different-address" className="text-sm text-muted-foreground cursor-pointer">
+                              Use a different address for this order
+                            </Label>
+                          </div>
+                          {useDifferentAddress && (
+                            <Textarea
+                              id="address"
+                              placeholder="Enter a different delivery address"
+                              value={formData.address}
+                              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                              rows={3}
+                              required
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <Textarea
+                          id="address"
+                          placeholder="Enter your complete delivery address"
+                          value={formData.address}
+                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                          rows={4}
+                          required
+                        />
+                      )}
                     </div>
                   </div>
                 ) : (
