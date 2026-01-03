@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, Store, Package, Plus, LayoutDashboard, HeadphonesIcon, DollarSign } from 'lucide-react';
+import { LogOut, Store, Package, Plus, LayoutDashboard, HeadphonesIcon, DollarSign, ShoppingBag } from 'lucide-react';
 import LogoutConfirmDialog from '@/components/LogoutConfirmDialog';
 
 export default function SellerHeader() {
@@ -46,6 +46,13 @@ export default function SellerHeader() {
                 >
                   <Plus className="h-4 w-4" />
                   Add Product
+                </Link>
+                <Link 
+                  to="/seller/orders" 
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  Orders
                 </Link>
                 <Link 
                   to="/seller/earnings" 

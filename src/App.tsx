@@ -35,6 +35,7 @@ import AddProduct from "./pages/seller/AddProduct";
 import PendingApproval from "./pages/seller/PendingApproval";
 import SellerSupport from "./pages/seller/Support";
 import SellerEarnings from "./pages/seller/Earnings";
+import SellerOrders from "./pages/seller/SellerOrders";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PendingProducts from "./pages/admin/PendingProducts";
 import SupportTickets from "./pages/admin/SupportTickets";
@@ -137,6 +138,11 @@ const App = () => (
                 <Route path="/seller/support" element={
                   <ProtectedRoute requireSeller>
                     <SellerSupport />
+                  </ProtectedRoute>
+                } />
+                <Route path="/seller/orders" element={
+                  <ProtectedRoute requireSeller>
+                    <SellerOrders />
                   </ProtectedRoute>
                 } />
                 <Route path="/seller/earnings" element={
