@@ -16,6 +16,7 @@ import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import Contact from "./pages/Contact";
 import MyOrders from "./pages/MyOrders";
+import MyReviews from "./pages/MyReviews";
 import About from "./pages/About";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
@@ -173,6 +174,11 @@ const App = () => (
                   <Route path="my-orders" element={
                     <ProtectedRoute requireCustomer>
                       <MyOrders />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="my-reviews" element={
+                    <ProtectedRoute requireCustomer>
+                      <MyReviews />
                     </ProtectedRoute>
                   } />
                   <Route path="profile" element={

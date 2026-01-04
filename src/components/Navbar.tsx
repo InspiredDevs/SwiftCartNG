@@ -41,9 +41,14 @@ const Navbar = () => {
                 </>
               )}
               {user && isCustomer && (
-                <Link to="/my-orders" className="text-foreground hover:text-primary transition-colors">
-                  My Orders
-                </Link>
+                <>
+                  <Link to="/my-orders" className="text-foreground hover:text-primary transition-colors">
+                    My Orders
+                  </Link>
+                  <Link to="/my-reviews" className="text-foreground hover:text-primary transition-colors">
+                    My Reviews
+                  </Link>
+                </>
               )}
               {user ? (
                 isCustomer ? (
@@ -139,13 +144,22 @@ const Navbar = () => {
                   </>
                 )}
                 {user && isCustomer && (
-                  <Link
-                    to="/my-orders"
-                    className="text-foreground hover:text-primary transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    My Orders
-                  </Link>
+                  <>
+                    <Link
+                      to="/my-orders"
+                      className="text-foreground hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Orders
+                    </Link>
+                    <Link
+                      to="/my-reviews"
+                      className="text-foreground hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      My Reviews
+                    </Link>
+                  </>
                 )}
                 {user ? (
                   isCustomer ? (
