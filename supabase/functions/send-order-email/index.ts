@@ -205,7 +205,8 @@ const generateCustomerOrderEmail = (
 const generateStatusUpdateEmail = (
   order: any,
   newStatus: string,
-  appUrl: string
+  appUrl: string,
+  orderItems?: OrderItem[]
 ) => {
   const statusColors: Record<string, string> = {
     pending: "#f59e0b",
@@ -216,6 +217,20 @@ const generateStatusUpdateEmail = (
   };
   
   const statusColor = statusColors[newStatus.toLowerCase()] || "#6b7280";
+  const isDelivered = newStatus.toLowerCase() === 'delivered';
+
+  // Generate review CTA section for delivered orders
+  const reviewSection = isDelivered && orderItems && orderItems.length > 0 ? `
+    <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; text-align: center;">
+      <h3 style="margin: 0 0 10px 0; color: #92400e; font-size: 18px;">⭐ How was your purchase?</h3>
+      <p style="margin: 0 0 15px 0; color: #a16207; font-size: 14px;">
+        Your feedback helps other shoppers and our sellers improve!
+      </p>
+      <a href="${appUrl}/my-orders?orderId=${order.id}&review=true" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+        Leave a Review
+      </a>
+    </div>
+  ` : '';
 
   return `
     <!DOCTYPE html>
@@ -227,7 +242,7 @@ const generateStatusUpdateEmail = (
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;">
       <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <div style="background: linear-gradient(135deg, ${statusColor}, ${statusColor}dd); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">📦 Order Update</h1>
+          <h1 style="color: white; margin: 0; font-size: 24px;">${isDelivered ? '🎉 Order Delivered!' : '📦 Order Update'}</h1>
         </div>
         <div style="padding: 30px;">
           <p style="font-size: 16px; color: #374151;">Hi ${order.customer_name},</p>
@@ -238,6 +253,8 @@ const generateStatusUpdateEmail = (
           </div>
 
           <p style="font-size: 16px; color: #374151; line-height: 1.6;">${getStatusDescription(newStatus)}</p>
+
+          ${reviewSection}
 
           <div style="text-align: center; margin-top: 30px;">
             <a href="${appUrl}/my-orders?orderId=${order.id}" style="display: inline-block; background: ${statusColor}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Order</a>
@@ -616,7 +633,7 @@ serve(async (req) => {
     } else if (type === "status_update" && newStatus) {
       // Send status update to customer
       if (order.customer_email) {
-        const statusHtml = generateStatusUpdateEmail(order, newStatus, appUrl);
+        const statusHtml = generateStatusUpdateEmail(order, newStatus, appUrl, orderItems);
         await sendBrevoEmail(
           [{ email: order.customer_email, name: order.customer_name }],
           `Order ${order.order_code} - Status: ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
