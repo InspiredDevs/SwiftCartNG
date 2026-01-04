@@ -32,14 +32,14 @@ interface MyReview {
 const MyReviews = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-  const highlightOrderId = searchParams.get('order');
-  
+  const highlightOrderId = searchParams.get("order") ?? searchParams.get("order_id");
+
   const [productsToReview, setProductsToReview] = useState<ProductToReview[]>([]);
   const [myReviews, setMyReviews] = useState<MyReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [reviewForms, setReviewForms] = useState<Record<string, { rating: number; text: string }>>({});
-  const [expandedSection, setExpandedSection] = useState<'awaiting' | 'reviews' | null>('awaiting');
+  const [expandedSection, setExpandedSection] = useState<"awaiting" | "reviews" | null>("awaiting");
 
   useEffect(() => {
     if (user) {
@@ -51,81 +51,129 @@ const MyReviews = () => {
     if (!user?.email) return;
 
     try {
-      // Fetch delivered orders for this user
+      // Fetch delivered orders for this user (handle different casing)
       const { data: orders, error: ordersError } = await supabase
-        .from('orders')
-        .select(`
+        .from("orders")
+        .select(
+          `
           id,
           order_code,
           updated_at,
+          status,
           order_items (
             product_name
           )
-        `)
-        .eq('customer_email', user.email)
-        .eq('status', 'Delivered');
+        `
+        )
+        .eq("customer_email", user.email)
+        .in("status", ["Delivered", "delivered"]);
 
       if (ordersError) throw ordersError;
 
       // Fetch user's existing reviews
       const { data: reviews, error: reviewsError } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('user_id', user.id);
+        .from("reviews")
+        .select("*")
+        .eq("user_id", user.id);
 
       if (reviewsError) throw reviewsError;
 
-      // Get all product names from orders
+      // If we arrived via an email deep-link, validate the order status/ownership
+      // and provide correct UX feedback.
+      if (highlightOrderId) {
+        const isInDeliveredList = (orders || []).some((o) => o.id === highlightOrderId);
+
+        if (!isInDeliveredList) {
+          const { data: linkedOrder, error: linkedOrderError } = await supabase
+            .from("orders")
+            .select("id, status")
+            .eq("id", highlightOrderId)
+            .eq("customer_email", user.email)
+            .maybeSingle();
+
+          if (!linkedOrderError) {
+            if (!linkedOrder) {
+              toast.error("Order not found");
+            } else if ((linkedOrder.status || "").toLowerCase() !== "delivered") {
+              toast.info("Review available after delivery");
+            }
+          }
+        }
+      }
+
+      // Collect all product names from delivered orders
       const productNames = new Set<string>();
-      orders?.forEach(order => {
+      orders?.forEach((order) => {
         order.order_items?.forEach((item: any) => {
           productNames.add(item.product_name);
         });
       });
 
-      // Fetch products to get images and IDs
-      const { data: products, error: productsError } = await supabase
-        .from('products')
-        .select('id, name, image_url')
-        .in('name', Array.from(productNames));
+      // Also collect product_ids from existing reviews so "My Reviews" never breaks
+      // even if the delivered orders query returns 0 rows.
+      const reviewProductIds = Array.from(new Set((reviews || []).map((r: any) => r.product_id)));
 
-      if (productsError) throw productsError;
+      const [productsByNameRes, productsByIdRes] = await Promise.all([
+        productNames.size > 0
+          ? supabase
+              .from("products")
+              .select("id, name, image_url")
+              .in("name", Array.from(productNames))
+          : Promise.resolve({ data: [], error: null }),
+        reviewProductIds.length > 0
+          ? supabase
+              .from("products")
+              .select("id, name, image_url")
+              .in("id", reviewProductIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
 
-      const productMap = new Map(products?.map(p => [p.name, { id: p.id, image_url: p.image_url }]));
+      if (productsByNameRes.error) throw productsByNameRes.error;
+      if (productsByIdRes.error) throw productsByIdRes.error;
+
+      // Merge and de-dupe products
+      const allProductsRaw = [
+        ...(productsByNameRes.data || []),
+        ...(productsByIdRes.data || []),
+      ] as Array<{ id: string; name: string; image_url: string | null }>;
+
+      const productById = new Map(allProductsRaw.map((p) => [p.id, p]));
+      const allProducts = Array.from(productById.values());
+      const productMap = new Map(allProducts.map((p) => [p.name, { id: p.id, image_url: p.image_url }]));
 
       // Build products awaiting review (exclude already reviewed)
       const reviewedProductOrders = new Set(
-        reviews?.map(r => `${r.product_id}-${r.order_id}`) || []
+        (reviews || []).map((r: any) => `${r.product_id}-${r.order_id}`)
       );
 
       const awaiting: ProductToReview[] = [];
-      orders?.forEach(order => {
+      orders?.forEach((order) => {
         order.order_items?.forEach((item: any) => {
           const product = productMap.get(item.product_name);
-          if (product) {
-            const key = `${product.id}-${order.id}`;
-            if (!reviewedProductOrders.has(key)) {
-              awaiting.push({
-                product_id: product.id,
-                product_name: item.product_name,
-                product_image: product.image_url,
-                order_id: order.id,
-                order_code: order.order_code,
-                delivered_at: order.updated_at,
-              });
-            }
+          if (!product) return;
+
+          const key = `${product.id}-${order.id}`;
+          if (!reviewedProductOrders.has(key)) {
+            awaiting.push({
+              product_id: product.id,
+              product_name: item.product_name,
+              product_image: product.image_url,
+              order_id: order.id,
+              order_code: order.order_code,
+              delivered_at: order.updated_at,
+            });
           }
         });
       });
 
       // Build my reviews with product info
-      const myReviewsList: MyReview[] = [];
-      for (const review of reviews || []) {
-        const order = orders?.find(o => o.id === review.order_id);
-        const product = products?.find(p => p.id === review.product_id);
-        
-        if (product) {
-          myReviewsList.push({
+      const orderCodeById = new Map((orders || []).map((o: any) => [o.id, o.order_code]));
+      const myReviewsList: MyReview[] = (reviews || [])
+        .map((review: any) => {
+          const product = productById.get(review.product_id);
+          if (!product) return null;
+
+          return {
             id: review.id,
             product_id: review.product_id,
             product_name: product.name,
@@ -133,26 +181,36 @@ const MyReviews = () => {
             rating: review.rating,
             review_text: review.review_text,
             created_at: review.created_at,
-            order_code: order?.order_code || 'Unknown',
-          });
+            order_code: orderCodeById.get(review.order_id) || "Unknown",
+          } satisfies MyReview;
+        })
+        .filter(Boolean) as MyReview[];
+
+      setProductsToReview(awaiting);
+      setMyReviews(
+        myReviewsList.sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+      );
+
+      // Auto-switch to "My Reviews" when arriving via deep-link and nothing is eligible.
+      if (highlightOrderId) {
+        const hasAwaitingForOrder = awaiting.some((a) => a.order_id === highlightOrderId);
+        const hasAnyReviewForOrder = (reviews || []).some((r: any) => r.order_id === highlightOrderId);
+        if (!hasAwaitingForOrder && hasAnyReviewForOrder) {
+          setExpandedSection("reviews");
         }
       }
 
-      setProductsToReview(awaiting);
-      setMyReviews(myReviewsList.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      ));
-
       // Initialize forms
       const forms: Record<string, { rating: number; text: string }> = {};
-      awaiting.forEach(p => {
-        forms[`${p.product_id}-${p.order_id}`] = { rating: 5, text: '' };
+      awaiting.forEach((p) => {
+        forms[`${p.product_id}-${p.order_id}`] = { rating: 5, text: "" };
       });
       setReviewForms(forms);
-
     } catch (error) {
-      console.error('Error fetching review data:', error);
-      toast.error('Failed to load reviews');
+      console.error("Error fetching review data:", error);
+      toast.error("Failed to load reviews");
     } finally {
       setLoading(false);
     }

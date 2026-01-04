@@ -181,6 +181,12 @@ const App = () => (
                       <MyReviews />
                     </ProtectedRoute>
                   } />
+                  {/* Alias for email deep-links */}
+                  <Route path="reviews" element={
+                    <ProtectedRoute requireCustomer>
+                      <MyReviews />
+                    </ProtectedRoute>
+                  } />
                   <Route path="profile" element={
                     <ProtectedRoute requireCustomer>
                       <Profile />
