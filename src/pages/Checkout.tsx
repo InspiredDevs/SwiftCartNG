@@ -144,6 +144,11 @@ const Checkout = () => {
         }
       }
 
+      // Send order notification emails (fire and forget - don't block checkout)
+      supabase.functions.invoke('send-order-email', {
+        body: { type: 'order_placed', orderId: orderData.id }
+      }).catch(err => console.error('Failed to send order emails:', err));
+
       toast.success("Order placed successfully!");
       clearCart();
       navigate(`/order-confirmation?orderId=${orderData.id}`);

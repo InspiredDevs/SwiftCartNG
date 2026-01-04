@@ -192,6 +192,11 @@ export default function Orders() {
       setOrders(prev => prev.map(o => 
         o.id === orderId ? { ...o, status: newStatus } : o
       ));
+      
+      // Send status update email to customer (fire and forget)
+      supabase.functions.invoke('send-order-email', {
+        body: { type: 'status_update', orderId, newStatus }
+      }).catch(err => console.error('Failed to send status update email:', err));
     }
   };
 
