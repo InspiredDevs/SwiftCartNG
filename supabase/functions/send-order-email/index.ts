@@ -49,6 +49,17 @@ const sendBrevoEmail = async (
   htmlContent: string
 ) => {
   console.log(`Sending email to: ${to.map(t => t.email).join(", ")}`);
+  console.log(`Using BREVO_API_KEY: ${BREVO_API_KEY ? "Key present (length: " + BREVO_API_KEY.length + ")" : "Key missing"}`);
+  console.log(`Using ADMIN_EMAIL as sender: ${ADMIN_EMAIL}`);
+  
+  const requestBody = {
+    sender: { name: "SwiftCart NG", email: ADMIN_EMAIL },
+    to,
+    subject,
+    htmlContent,
+  };
+  
+  console.log("Request body (excluding htmlContent):", JSON.stringify({ ...requestBody, htmlContent: "[HTML content omitted]" }));
   
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
@@ -57,21 +68,19 @@ const sendBrevoEmail = async (
       "Content-Type": "application/json",
       "api-key": BREVO_API_KEY!,
     },
-    body: JSON.stringify({
-      sender: { name: "SwiftCart NG", email: ADMIN_EMAIL },
-      to,
-      subject,
-      htmlContent,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
+  const responseText = await response.text();
+  console.log(`Brevo API response status: ${response.status}`);
+  console.log(`Brevo API response: ${responseText}`);
+
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Brevo API error:", errorText);
-    throw new Error(`Failed to send email: ${errorText}`);
+    console.error("Brevo API error:", responseText);
+    throw new Error(`Failed to send email: ${responseText}`);
   }
 
-  const result = await response.json();
+  const result = JSON.parse(responseText);
   console.log("Email sent successfully:", result);
   return result;
 };
