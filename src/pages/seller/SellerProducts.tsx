@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Clock, CheckCircle, XCircle, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SellerHeader from '@/components/seller/SellerHeader';
@@ -157,7 +157,17 @@ export default function SellerProducts() {
                             <h3 className="font-semibold text-lg truncate">{product.name}</h3>
                             <p className="text-sm text-muted-foreground">{product.category}</p>
                           </div>
-                          {getStatusBadge(product.status)}
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(product.status)}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/seller/products/${product.id}/edit`)}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
                         </div>
                         <div className="mt-2 flex items-center gap-4 text-sm">
                           <span className="font-medium text-primary">
