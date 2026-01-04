@@ -226,7 +226,7 @@ const generateStatusUpdateEmail = (
       <p style="margin: 0 0 15px 0; color: #a16207; font-size: 14px;">
         Your feedback helps other shoppers and our sellers improve!
       </p>
-      <a href="${appUrl}/my-reviews?order=${order.id}" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+      <a href="${appUrl}/reviews?order_id=${order.id}" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
         Review Your Product(s)
       </a>
     </div>
