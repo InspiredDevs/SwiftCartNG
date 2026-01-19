@@ -21,7 +21,8 @@ interface ProfileData {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { cart, getCartTotal, clearCart } = useCart();
+  const { cart, getSelectedTotal, getSelectedItems, clearCart } = useCart();
+  const selectedCartItems = getSelectedItems();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
@@ -97,7 +98,7 @@ const Checkout = () => {
     setIsSubmitting(true);
 
     try {
-      const totalAmount = getCartTotal();
+      const totalAmount = getSelectedTotal();
       const orderCode = generateOrderCode();
 
       // Insert order
@@ -117,8 +118,8 @@ const Checkout = () => {
 
       if (orderError) throw orderError;
 
-      // Insert order items
-      const orderItems = cart.map((item) => ({
+      // Insert order items (only selected items)
+      const orderItems = selectedCartItems.map((item) => ({
         order_id: orderData.id,
         product_name: item.name,
         product_price: item.price,
@@ -132,8 +133,8 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
-      // Update stock quantities for each product
-      for (const item of cart) {
+      // Update stock quantities for each selected product
+      for (const item of selectedCartItems) {
         const { error: stockError } = await supabase.rpc('decrement_stock', {
           product_id: item.id,
           quantity_to_subtract: item.quantity
@@ -160,7 +161,7 @@ const Checkout = () => {
     }
   };
 
-  if (cart.length === 0) {
+  if (selectedCartItems.length === 0) {
     navigate("/cart");
     return null;
   }
@@ -357,7 +358,7 @@ const Checkout = () => {
                 <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
                 
                 <div className="space-y-3 mb-6">
-                  {cart.map((item) => (
+                  {selectedCartItems.map((item) => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span className="text-muted-foreground">
                         {item.name} x {item.quantity}
@@ -372,11 +373,11 @@ const Checkout = () => {
                 <div className="border-t border-border pt-4 space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium">{formatPrice(getCartTotal())}</span>
+                    <span className="font-medium">{formatPrice(getSelectedTotal())}</span>
                   </div>
                   <div className="flex justify-between text-lg">
                     <span className="font-semibold">Total</span>
-                    <span className="font-bold text-primary">{formatPrice(getCartTotal())}</span>
+                    <span className="font-bold text-primary">{formatPrice(getSelectedTotal())}</span>
                   </div>
                 </div>
 

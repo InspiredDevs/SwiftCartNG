@@ -74,6 +74,31 @@ const Shop = () => {
               {/* Price Filter */}
               <div>
                 <h3 className="font-medium mb-3">Price Range</h3>
+                
+                {/* Preset Price Range Buttons */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[
+                    { label: "Under ₦5K", range: [0, 5000] },
+                    { label: "₦5K-₦20K", range: [5000, 20000] },
+                    { label: "₦20K-₦50K", range: [20000, 50000] },
+                    { label: "₦50K+", range: [50000, maxPrice] },
+                  ].map((preset) => (
+                    <Button
+                      key={preset.label}
+                      variant={
+                        priceRange[0] === preset.range[0] && priceRange[1] === preset.range[1]
+                          ? "default"
+                          : "outline"
+                      }
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => setPriceRange(preset.range as [number, number])}
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+
                 <Slider
                   value={priceRange}
                   onValueChange={setPriceRange}

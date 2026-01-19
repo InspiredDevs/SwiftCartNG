@@ -120,6 +120,7 @@ export type Database = {
           delivery_address: string
           id: string
           order_code: string
+          order_deadline: string | null
           status: string | null
           total_amount: number
           updated_at: string | null
@@ -132,6 +133,7 @@ export type Database = {
           delivery_address: string
           id?: string
           order_code: string
+          order_deadline?: string | null
           status?: string | null
           total_amount: number
           updated_at?: string | null
@@ -144,6 +146,7 @@ export type Database = {
           delivery_address?: string
           id?: string
           order_code?: string
+          order_deadline?: string | null
           status?: string | null
           total_amount?: number
           updated_at?: string | null

@@ -6,12 +6,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface CartContextType {
   cart: CartItem[];
+  selectedItems: Set<string>;
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   getCartTotal: () => number;
   getCartCount: () => number;
+  getSelectedTotal: () => number;
+  getSelectedCount: () => number;
+  getSelectedItems: () => CartItem[];
+  toggleItemSelection: (productId: string) => void;
+  selectAllItems: () => void;
+  deselectAllItems: () => void;
   isLoading: boolean;
 }
 
@@ -22,6 +29,7 @@ const GUEST_CART_KEY = 'guest_cart';
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
 
   // Load cart from database for logged-in users
@@ -278,16 +286,80 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return cart.reduce((count, item) => count + item.quantity, 0);
   };
 
+  const getSelectedTotal = () => {
+    return cart
+      .filter(item => selectedItems.has(item.id))
+      .reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+
+  const getSelectedCount = () => {
+    return cart
+      .filter(item => selectedItems.has(item.id))
+      .reduce((count, item) => count + item.quantity, 0);
+  };
+
+  const getSelectedItems = () => {
+    return cart.filter(item => selectedItems.has(item.id));
+  };
+
+  const toggleItemSelection = (productId: string) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllItems = () => {
+    setSelectedItems(new Set(cart.map(item => item.id)));
+  };
+
+  const deselectAllItems = () => {
+    setSelectedItems(new Set());
+  };
+
+  // Auto-select new items when added to cart
+  useEffect(() => {
+    const cartIds = new Set(cart.map(item => item.id));
+    // Add any new items to selection
+    cart.forEach(item => {
+      if (!selectedItems.has(item.id)) {
+        setSelectedItems(prev => new Set([...prev, item.id]));
+      }
+    });
+    // Remove selection for items no longer in cart
+    setSelectedItems(prev => {
+      const newSet = new Set<string>();
+      prev.forEach(id => {
+        if (cartIds.has(id)) {
+          newSet.add(id);
+        }
+      });
+      return newSet;
+    });
+  }, [cart]);
+
   return (
     <CartContext.Provider
       value={{
         cart,
+        selectedItems,
         addToCart,
         removeFromCart,
         updateQuantity,
         clearCart,
         getCartTotal,
         getCartCount,
+        getSelectedTotal,
+        getSelectedCount,
+        getSelectedItems,
+        toggleItemSelection,
+        selectAllItems,
+        deselectAllItems,
         isLoading,
       }}
     >

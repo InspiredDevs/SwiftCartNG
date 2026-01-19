@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Package, ChevronRight, Copy, Check, Clock, Truck, CheckCircle, XCircle, CreditCard } from "lucide-react";
+import { Package, ChevronRight, Copy, Check, Clock, Truck, CheckCircle, XCircle, CreditCard, Lock, AlertTriangle, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 interface OrderItem {
@@ -23,6 +26,9 @@ interface Order {
   total_amount: number;
   created_at: string;
   delivery_address: string;
+  customer_name: string;
+  customer_phone: string;
+  order_deadline: string | null;
   order_items: OrderItem[];
 }
 
@@ -33,6 +39,10 @@ const MyOrders = () => {
   const [loading, setLoading] = useState(true);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(searchParams.get('orderId'));
   const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
+  const [editingOrder, setEditingOrder] = useState<string | null>(null);
+  const [editData, setEditData] = useState({ customer_name: "", customer_phone: "", delivery_address: "" });
+  const [isSaving, setIsSaving] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -51,6 +61,9 @@ const MyOrders = () => {
             total_amount,
             created_at,
             delivery_address,
+            customer_name,
+            customer_phone,
+            order_deadline,
             order_items (
               id,
               product_name,
@@ -75,6 +88,28 @@ const MyOrders = () => {
     fetchOrders();
   }, [user]);
 
+  // Countdown timer effect
+  useEffect(() => {
+    const updateTimers = () => {
+      const now = Date.now();
+      const newTimeRemaining: Record<string, number> = {};
+      
+      orders.forEach(order => {
+        if (order.order_deadline) {
+          const deadline = new Date(order.order_deadline).getTime();
+          const remaining = Math.max(0, deadline - now);
+          newTimeRemaining[order.id] = remaining;
+        }
+      });
+      
+      setTimeRemaining(newTimeRemaining);
+    };
+
+    updateTimers();
+    const interval = setInterval(updateTimers, 1000);
+    return () => clearInterval(interval);
+  }, [orders]);
+
   const copyOrderCode = async (orderCode: string) => {
     try {
       await navigator.clipboard.writeText(orderCode);
@@ -96,6 +131,63 @@ const MyOrders = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const formatTimeRemaining = (ms: number) => {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    }
+    return `${minutes}m ${seconds}s`;
+  };
+
+  const isOrderEditable = (order: Order) => {
+    if (!order.order_deadline) return false;
+    const remaining = timeRemaining[order.id] || 0;
+    return remaining > 0 && order.status.toLowerCase() === 'pending';
+  };
+
+  const startEditing = (order: Order) => {
+    setEditingOrder(order.id);
+    setEditData({
+      customer_name: order.customer_name,
+      customer_phone: order.customer_phone,
+      delivery_address: order.delivery_address,
+    });
+  };
+
+  const handleSaveChanges = async (orderId: string) => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          customer_name: editData.customer_name,
+          customer_phone: editData.customer_phone,
+          delivery_address: editData.delivery_address,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(o => 
+        o.id === orderId 
+          ? { ...o, ...editData }
+          : o
+      ));
+
+      toast.success("Order details updated successfully!");
+      setEditingOrder(null);
+    } catch (error) {
+      console.error("Error updating order:", error);
+      toast.error("Failed to update order details");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getStatusConfig = (status: string) => {
@@ -248,6 +340,9 @@ const MyOrders = () => {
             const statusConfig = getStatusConfig(order.status);
             const StatusIcon = statusConfig.icon;
             const isExpanded = expandedOrder === order.id;
+            const isEditable = isOrderEditable(order);
+            const remaining = timeRemaining[order.id] || 0;
+            const isEditing = editingOrder === order.id;
 
             return (
               <Card key={order.id} className="overflow-hidden">
@@ -295,6 +390,79 @@ const MyOrders = () => {
 
                 {isExpanded && (
                   <CardContent className="border-t border-border pt-6">
+                    {/* Edit Timer */}
+                    {order.status.toLowerCase() === 'pending' && order.order_deadline && (
+                      <div className={`mb-4 p-3 rounded-lg border ${remaining > 0 ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800' : 'bg-muted border-border'}`}>
+                        <div className="flex items-center gap-3">
+                          {remaining > 0 ? (
+                            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                          ) : (
+                            <Lock className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <div className="flex-1">
+                            {remaining > 0 ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-amber-800 dark:text-amber-200">
+                                  Time to edit:
+                                </span>
+                                <span className="font-bold text-amber-600 dark:text-amber-400">
+                                  {formatTimeRemaining(remaining)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">Edit window expired</span>
+                            )}
+                          </div>
+                          {isEditable && !isEditing && (
+                            <Button variant="outline" size="sm" onClick={() => startEditing(order)}>
+                              <Edit2 className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Edit Form */}
+                    {isEditing && (
+                      <div className="mb-4 p-4 bg-muted/50 rounded-lg border border-border space-y-4">
+                        <h3 className="font-semibold">Edit Order Details</h3>
+                        <div>
+                          <Label htmlFor={`edit-name-${order.id}`}>Full Name</Label>
+                          <Input
+                            id={`edit-name-${order.id}`}
+                            value={editData.customer_name}
+                            onChange={(e) => setEditData(prev => ({ ...prev, customer_name: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`edit-phone-${order.id}`}>Phone Number</Label>
+                          <Input
+                            id={`edit-phone-${order.id}`}
+                            value={editData.customer_phone}
+                            onChange={(e) => setEditData(prev => ({ ...prev, customer_phone: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`edit-address-${order.id}`}>Delivery Address</Label>
+                          <Textarea
+                            id={`edit-address-${order.id}`}
+                            value={editData.delivery_address}
+                            onChange={(e) => setEditData(prev => ({ ...prev, delivery_address: e.target.value }))}
+                            rows={3}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={() => handleSaveChanges(order.id)} disabled={isSaving} size="sm">
+                            {isSaving ? "Saving..." : "Save Changes"}
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => setEditingOrder(null)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Status Progress */}
                     <div className="mb-6">
                       <h4 className="font-medium mb-4">Order Status</h4>

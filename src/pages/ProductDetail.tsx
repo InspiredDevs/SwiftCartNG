@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingCart, Star, ArrowLeft, Package, Store } from "lucide-react";
+import { ShoppingCart, Star, ArrowLeft, Package, Store, Plus, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import ProductReviews from "@/components/ProductReviews";
@@ -14,6 +14,7 @@ const ProductDetail = () => {
   const { products, loading } = useProducts();
   const product = products.find((p) => p.id === id);
   const [sellerInfo, setSellerInfo] = useState<{ name: string; isOfficial: boolean } | null>(null);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     if (product?.seller_id) {
@@ -143,14 +144,49 @@ const ProductDetail = () => {
             </div>
 
             <div className="space-y-4">
+              {/* Quantity Selector */}
+              <div className="flex items-center gap-4">
+                <span className="font-medium">Quantity:</span>
+                <div className="flex items-center gap-2 bg-secondary rounded-lg p-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="w-12 text-center font-medium">{quantity}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setQuantity(quantity + 1)}
+                    disabled={product.stock_quantity !== null && quantity >= product.stock_quantity}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {product.stock_quantity !== null && product.stock_quantity > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {product.stock_quantity} available
+                  </span>
+                )}
+              </div>
+
               <Button
                 size="lg"
                 className="w-full text-lg"
-                onClick={() => addToCart(product)}
+                onClick={() => {
+                  for (let i = 0; i < quantity; i++) {
+                    addToCart(product);
+                  }
+                }}
                 disabled={!product.in_stock}
               >
                 <ShoppingCart className="mr-2 h-5 w-5" />
-                {product.in_stock ? "Add to Cart" : "Out of Stock"}
+                {product.in_stock ? `Add ${quantity} to Cart` : "Out of Stock"}
               </Button>
               
               <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground">
