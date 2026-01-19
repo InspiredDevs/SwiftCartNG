@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Package, ShoppingBag, Copy, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { CheckCircle, Package, ShoppingBag, Copy, Check, Clock, AlertTriangle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -10,7 +13,10 @@ interface OrderDetails {
   order_code: string;
   total_amount: number;
   customer_name: string;
+  customer_phone: string;
+  delivery_address: string;
   created_at: string;
+  order_deadline: string | null;
   items: Array<{
     product_name: string;
     quantity: number;
@@ -25,6 +31,15 @@ const OrderConfirmation = () => {
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [isExpired, setIsExpired] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    customer_name: "",
+    customer_phone: "",
+    delivery_address: "",
+  });
+  const [isSaving, setIsSaving] = useState(false);
 
   const copyOrderCode = () => {
     if (order?.order_code) {
@@ -43,7 +58,6 @@ const OrderConfirmation = () => {
       }
 
       try {
-        // Fetch order details
         const { data: orderData, error: orderError } = await supabase
           .from("orders")
           .select("*")
@@ -52,7 +66,6 @@ const OrderConfirmation = () => {
 
         if (orderError) throw orderError;
 
-        // Fetch order items
         const { data: itemsData, error: itemsError } = await supabase
           .from("order_items")
           .select("*")
@@ -60,9 +73,16 @@ const OrderConfirmation = () => {
 
         if (itemsError) throw itemsError;
 
-        setOrder({
+        const orderWithItems = {
           ...orderData,
           items: itemsData,
+        };
+        
+        setOrder(orderWithItems);
+        setEditData({
+          customer_name: orderData.customer_name,
+          customer_phone: orderData.customer_phone,
+          delivery_address: orderData.delivery_address,
         });
       } catch (error) {
         console.error("Error fetching order:", error);
@@ -73,6 +93,74 @@ const OrderConfirmation = () => {
 
     fetchOrderDetails();
   }, [orderId, navigate]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!order?.order_deadline) return;
+
+    const calculateTimeRemaining = () => {
+      const deadline = new Date(order.order_deadline!).getTime();
+      const now = Date.now();
+      const remaining = Math.max(0, deadline - now);
+      
+      if (remaining <= 0) {
+        setIsExpired(true);
+        setTimeRemaining(0);
+      } else {
+        setTimeRemaining(remaining);
+      }
+    };
+
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+
+    return () => clearInterval(interval);
+  }, [order?.order_deadline]);
+
+  const formatTimeRemaining = (ms: number) => {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    }
+    return `${minutes}m ${seconds}s`;
+  };
+
+  const handleSaveChanges = async () => {
+    if (!orderId || isExpired) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          customer_name: editData.customer_name,
+          customer_phone: editData.customer_phone,
+          delivery_address: editData.delivery_address,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      setOrder(prev => prev ? {
+        ...prev,
+        customer_name: editData.customer_name,
+        customer_phone: editData.customer_phone,
+        delivery_address: editData.delivery_address,
+      } : null);
+
+      toast.success("Order details updated successfully!");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating order:", error);
+      toast.error("Failed to update order details");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -110,6 +198,93 @@ const OrderConfirmation = () => {
             </p>
           </div>
 
+          {/* Countdown Timer */}
+          {timeRemaining !== null && (
+            <div className={`mb-6 p-4 rounded-lg border ${isExpired ? 'bg-muted border-border' : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'}`}>
+              <div className="flex items-center gap-3">
+                {isExpired ? (
+                  <Lock className="h-5 w-5 text-muted-foreground" />
+                ) : (
+                  <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                )}
+                <div className="flex-1">
+                  {isExpired ? (
+                    <p className="font-medium text-muted-foreground">
+                      Edit window has expired
+                    </p>
+                  ) : (
+                    <>
+                      <p className="font-medium text-amber-800 dark:text-amber-200">
+                        Time remaining to edit order details
+                      </p>
+                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                        {formatTimeRemaining(timeRemaining)}
+                      </p>
+                    </>
+                  )}
+                </div>
+                {!isExpired && !isEditing && (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    Edit Details
+                  </Button>
+                )}
+              </div>
+              {!isExpired && (
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                  <AlertTriangle className="h-3 w-3 inline mr-1" />
+                  You can update your name, phone, and delivery address before the timer expires.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Edit Form */}
+          {isEditing && !isExpired && (
+            <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border space-y-4">
+              <h3 className="font-semibold">Edit Order Details</h3>
+              <div>
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editData.customer_name}
+                  onChange={(e) => setEditData(prev => ({ ...prev, customer_name: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-phone">Phone Number</Label>
+                <Input
+                  id="edit-phone"
+                  value={editData.customer_phone}
+                  onChange={(e) => setEditData(prev => ({ ...prev, customer_phone: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-address">Delivery Address</Label>
+                <Textarea
+                  id="edit-address"
+                  value={editData.delivery_address}
+                  onChange={(e) => setEditData(prev => ({ ...prev, delivery_address: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleSaveChanges} disabled={isSaving}>
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button variant="outline" onClick={() => {
+                  setIsEditing(false);
+                  setEditData({
+                    customer_name: order.customer_name,
+                    customer_phone: order.customer_phone,
+                    delivery_address: order.delivery_address,
+                  });
+                }}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Order Details */}
           <div className="border-t border-b border-border py-6 mb-6">
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -137,6 +312,10 @@ const OrderConfirmation = () => {
                   {new Date(order.created_at).toLocaleDateString()}
                 </p>
               </div>
+            </div>
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">Delivery Address</p>
+              <p className="text-sm font-medium whitespace-pre-wrap">{order.delivery_address}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Total Amount</p>
