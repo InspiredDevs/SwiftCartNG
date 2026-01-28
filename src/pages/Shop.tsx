@@ -75,41 +75,87 @@ const Shop = () => {
               <div>
                 <h3 className="font-medium mb-3">Price Range</h3>
                 
-                {/* Preset Price Range Buttons */}
-                <div className="flex flex-wrap gap-2 mb-4">
+                {/* Quick Budget Presets */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
                   {[
                     { label: "Under ₦5K", range: [0, 5000] },
-                    { label: "₦5K-₦20K", range: [5000, 20000] },
-                    { label: "₦20K-₦50K", range: [20000, 50000] },
-                    { label: "₦50K+", range: [50000, maxPrice] },
-                  ].map((preset) => (
-                    <Button
-                      key={preset.label}
-                      variant={
-                        priceRange[0] === preset.range[0] && priceRange[1] === preset.range[1]
-                          ? "default"
-                          : "outline"
-                      }
-                      size="sm"
-                      className="text-xs"
-                      onClick={() => setPriceRange(preset.range as [number, number])}
-                    >
-                      {preset.label}
-                    </Button>
-                  ))}
+                    { label: "₦5K - ₦20K", range: [5000, 20000] },
+                    { label: "₦20K - ₦50K", range: [20000, 50000] },
+                    { label: "Above ₦50K", range: [50000, maxPrice] },
+                  ].map((preset) => {
+                    const isActive = priceRange[0] === preset.range[0] && priceRange[1] === preset.range[1];
+                    return (
+                      <button
+                        key={preset.label}
+                        onClick={() => setPriceRange(preset.range as [number, number])}
+                        className={`
+                          px-3 py-2.5 rounded-lg text-sm font-medium transition-all
+                          border-2 text-center
+                          ${isActive 
+                            ? 'bg-primary text-primary-foreground border-primary' 
+                            : 'bg-card border-border hover:border-primary/50 hover:bg-muted'
+                          }
+                        `}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                <Slider
-                  value={priceRange}
-                  onValueChange={setPriceRange}
-                  max={maxPrice}
-                  step={5000}
-                  className="mb-4"
-                />
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>{formatPrice(priceRange[0])}</span>
-                  <span>{formatPrice(priceRange[1])}</span>
+                {/* Custom Range Inputs */}
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Or set custom range:</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <label className="text-xs text-muted-foreground mb-1 block">Min</label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₦</span>
+                        <input
+                          type="number"
+                          value={priceRange[0]}
+                          onChange={(e) => {
+                            const val = Math.max(0, Math.min(Number(e.target.value), priceRange[1]));
+                            setPriceRange([val, priceRange[1]]);
+                          }}
+                          className="w-full pl-6 pr-2 py-2 rounded-md border border-input bg-background text-sm"
+                          min={0}
+                          max={priceRange[1]}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-muted-foreground mt-5">—</span>
+                    <div className="flex-1">
+                      <label className="text-xs text-muted-foreground mb-1 block">Max</label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">₦</span>
+                        <input
+                          type="number"
+                          value={priceRange[1]}
+                          onChange={(e) => {
+                            const val = Math.min(maxPrice, Math.max(Number(e.target.value), priceRange[0]));
+                            setPriceRange([priceRange[0], val]);
+                          }}
+                          className="w-full pl-6 pr-2 py-2 rounded-md border border-input bg-background text-sm"
+                          min={priceRange[0]}
+                          max={maxPrice}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Reset Button */}
+                {(priceRange[0] !== 0 || priceRange[1] !== maxPrice) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full mt-3 text-muted-foreground"
+                    onClick={() => setPriceRange([0, maxPrice])}
+                  >
+                    Reset price filter
+                  </Button>
+                )}
               </div>
             </div>
           </aside>

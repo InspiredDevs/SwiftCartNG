@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { CartItem as CartItemType } from "@/types/product";
 import { useCart } from "@/contexts/CartContext";
+import CartItemPreviewDialog from "./CartItemPreviewDialog";
 
 interface CartItemProps {
   item: CartItemType;
@@ -65,6 +66,9 @@ const CartItem = ({ item }: CartItemProps) => {
               <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
+
+          {/* Preview Button */}
+          <CartItemPreviewDialog item={item} />
 
           <Button
             variant="ghost"
