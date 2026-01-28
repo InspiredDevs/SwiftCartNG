@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 
 const Shop = () => {
   const { products, loading } = useProducts();
