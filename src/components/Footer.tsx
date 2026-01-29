@@ -1,6 +1,46 @@
-import { Facebook, Instagram, Twitter, Mail, Phone } from "lucide-react";
+import { useState } from "react";
+import { Facebook, Instagram, Twitter, Mail, Phone, Send, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .insert({ email: email.toLowerCase().trim() });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.info("You're already subscribed!");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Thanks for subscribing! 🎉");
+        setEmail("");
+      }
+    } catch (error) {
+      console.error("Newsletter subscription error:", error);
+      toast.error("Failed to subscribe. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <footer className="bg-secondary border-t border-border mt-16">
       <div className="container mx-auto px-4 py-12">
@@ -46,8 +86,29 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Follow Us</h4>
-            <div className="flex gap-4">
+            <h4 className="font-semibold mb-4">Newsletter</h4>
+            <p className="text-sm text-muted-foreground mb-3">
+              Subscribe for deals & updates
+            </p>
+            <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="Your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1"
+                disabled={loading}
+              />
+              <Button type="submit" size="icon" disabled={loading}>
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </form>
+            
+            <div className="flex gap-4 mt-6">
               <a
                 href="https://facebook.com"
                 target="_blank"

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, Store, Package, Plus, LayoutDashboard, HeadphonesIcon, DollarSign, ShoppingBag } from 'lucide-react';
+import { LogOut, Store, Package, Plus, LayoutDashboard, HeadphonesIcon, DollarSign, ShoppingBag, BarChart3 } from 'lucide-react';
 import LogoutConfirmDialog from '@/components/LogoutConfirmDialog';
 
 export default function SellerHeader() {
@@ -60,6 +60,13 @@ export default function SellerHeader() {
                 >
                   <DollarSign className="h-4 w-4" />
                   Earnings
+                </Link>
+                <Link 
+                  to="/seller/analytics" 
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  Analytics
                 </Link>
                 <Link 
                   to="/seller/support" 
