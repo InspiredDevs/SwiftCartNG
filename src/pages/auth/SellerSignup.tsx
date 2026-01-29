@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { ArrowLeft, ShoppingCart } from 'lucide-react';
 
 export default function SellerSignup() {
   const [fullName, setFullName] = useState('');
@@ -91,8 +92,22 @@ export default function SellerSignup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 py-12">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="p-4 border-b">
+        <div className="container mx-auto flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm font-medium">Back to Home</span>
+          </Link>
+          <Link to="/" className="flex items-center gap-2">
+            <ShoppingCart className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold">SwiftCart NG</span>
+          </Link>
+        </div>
+      </header>
+      
+      <div className="flex-1 flex items-center justify-center p-4 py-12">
+        <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Become a Seller</CardTitle>
           <CardDescription className="text-center">
@@ -188,6 +203,7 @@ export default function SellerSignup() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
