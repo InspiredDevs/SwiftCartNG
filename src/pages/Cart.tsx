@@ -2,19 +2,23 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import CartItem from "@/components/CartItem";
+import SavedItemCard from "@/components/SavedItemCard";
 import { useCart } from "@/contexts/CartContext";
-import { ShoppingBag } from "lucide-react";
+import { useSavedItems } from "@/contexts/SavedItemsContext";
+import { ShoppingBag, Bookmark } from "lucide-react";
 
 const Cart = () => {
   const { 
     cart, 
     selectedItems,
+    addToCart,
     getCartTotal, 
     getSelectedTotal,
     getSelectedCount,
     selectAllItems,
     deselectAllItems 
   } = useCart();
+  const { savedItems, removeSavedItem } = useSavedItems();
 
   const formatPrice = (price: number) => {
     return `₦${price.toLocaleString()}`;
@@ -24,7 +28,7 @@ const Cart = () => {
   const someSelected = selectedItems.size > 0 && selectedItems.size < cart.length;
   const hasSelectedItems = selectedItems.size > 0;
 
-  if (cart.length === 0) {
+  if (cart.length === 0 && savedItems.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -39,51 +43,57 @@ const Cart = () => {
     );
   }
 
+  const handleMoveToCart = async (item: typeof savedItems[0]) => {
+    await addToCart(item);
+    await removeSavedItem(item.id);
+  };
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <h1 className="text-4xl font-bold mb-8">Shopping Cart</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Cart Items */}
-          <div className="lg:col-span-2">
-            <div className="bg-card border border-border rounded-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">
-                  Cart Items ({cart.length})
-                </h2>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Checkbox 
-                      id="select-all"
-                      checked={allSelected}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          selectAllItems();
-                        } else {
-                          deselectAllItems();
-                        }
-                      }}
-                      className={someSelected ? "data-[state=checked]:bg-primary/50" : ""}
-                    />
-                    <label htmlFor="select-all" className="text-sm text-muted-foreground cursor-pointer">
-                      Select all
-                    </label>
+        {cart.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2">
+              <div className="bg-card border border-border rounded-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold">
+                    Cart Items ({cart.length})
+                  </h2>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        id="select-all"
+                        checked={allSelected}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            selectAllItems();
+                          } else {
+                            deselectAllItems();
+                          }
+                        }}
+                        className={someSelected ? "data-[state=checked]:bg-primary/50" : ""}
+                      />
+                      <label htmlFor="select-all" className="text-sm text-muted-foreground cursor-pointer">
+                        Select all
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="space-y-4">
-                {cart.map((item) => (
-                  <CartItem key={item.id} item={item} />
-                ))}
+                <div className="space-y-4">
+                  {cart.map((item) => (
+                    <CartItem key={item.id} item={item} />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-card border border-border rounded-lg p-6 sticky top-24">
-              <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-card border border-border rounded-lg p-6 sticky top-24">
+                <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
               
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-sm">
@@ -127,6 +137,40 @@ const Cart = () => {
             </div>
           </div>
         </div>
+        ) : (
+          <div className="text-center py-12 bg-card border border-border rounded-lg">
+            <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Your cart is empty</h2>
+            <p className="text-muted-foreground mb-4">Add items from the shop or your saved items below.</p>
+            <Link to="/shop">
+              <Button>Browse Products</Button>
+            </Link>
+          </div>
+        )}
+
+        {/* Saved for Later Section */}
+        {savedItems.length > 0 && (
+          <div className="mt-8">
+            <div className="bg-card border border-border rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Bookmark className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-semibold">
+                  Saved for Later ({savedItems.length})
+                </h2>
+              </div>
+              <div className="space-y-2">
+                {savedItems.map((item) => (
+                  <SavedItemCard
+                    key={item.id}
+                    item={item}
+                    onMoveToCart={() => handleMoveToCart(item)}
+                    onRemove={() => removeSavedItem(item.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

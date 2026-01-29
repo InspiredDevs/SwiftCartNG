@@ -1,8 +1,9 @@
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2, Bookmark } from "lucide-react";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { CartItem as CartItemType } from "@/types/product";
 import { useCart } from "@/contexts/CartContext";
+import { useSavedItems } from "@/contexts/SavedItemsContext";
 import CartItemPreviewDialog from "./CartItemPreviewDialog";
 
 interface CartItemProps {
@@ -11,6 +12,7 @@ interface CartItemProps {
 
 const CartItem = ({ item }: CartItemProps) => {
   const { updateQuantity, removeFromCart, selectedItems, toggleItemSelection } = useCart();
+  const { saveForLater } = useSavedItems();
 
   const formatPrice = (price: number) => {
     return `₦${price.toLocaleString()}`;
@@ -69,6 +71,20 @@ const CartItem = ({ item }: CartItemProps) => {
 
           {/* Preview Button */}
           <CartItemPreviewDialog item={item} />
+
+          {/* Save for Later Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 sm:h-8 sm:w-8"
+            onClick={async () => {
+              await saveForLater(item);
+              removeFromCart(item.id);
+            }}
+            title="Save for later"
+          >
+            <Bookmark className="h-4 w-4" />
+          </Button>
 
           <Button
             variant="ghost"
