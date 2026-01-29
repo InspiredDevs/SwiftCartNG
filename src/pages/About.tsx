@@ -15,11 +15,11 @@ const About = () => {
           </p>
 
           {/* Delivery Person Image */}
-          <div className="mb-12">
+          <div className="mb-12 aspect-video w-full overflow-hidden rounded-xl shadow-lg">
             <img
               src={deliveryPerson}
-              alt="SwiftCart NG delivery person in branded uniform"
-              className="w-full h-64 md:h-80 object-cover rounded-xl shadow-lg"
+              alt="SwiftCart NG delivery person"
+              className="w-full h-full object-cover object-top"
             />
           </div>
 
