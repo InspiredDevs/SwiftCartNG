@@ -42,6 +42,7 @@ const MyOrders = () => {
   const [editingOrder, setEditingOrder] = useState<string | null>(null);
   const [editData, setEditData] = useState({ customer_name: "", customer_phone: "", delivery_address: "" });
   const [isSaving, setIsSaving] = useState(false);
+  const [isCancelling, setIsCancelling] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -187,6 +188,38 @@ const MyOrders = () => {
       toast.error("Failed to update order details");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string, orderCode: string) => {
+    if (!confirm(`Are you sure you want to cancel order ${orderCode}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setIsCancelling(orderId);
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          status: "Cancelled",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(o => 
+        o.id === orderId 
+          ? { ...o, status: "Cancelled" }
+          : o
+      ));
+
+      toast.success("Order cancelled successfully");
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      toast.error("Failed to cancel order");
+    } finally {
+      setIsCancelling(null);
     }
   };
 
@@ -491,10 +524,25 @@ const MyOrders = () => {
                       <p className="text-muted-foreground whitespace-pre-wrap">{order.delivery_address}</p>
                     </div>
 
-                    {/* Total */}
+                    {/* Total and Actions */}
                     <div className="flex justify-between items-center pt-4 border-t border-border">
-                      <span className="font-semibold">Total</span>
-                      <span className="text-xl font-bold text-primary">{formatCurrency(order.total_amount)}</span>
+                      <div>
+                        <span className="font-semibold">Total</span>
+                        <span className="text-xl font-bold text-primary ml-4">{formatCurrency(order.total_amount)}</span>
+                      </div>
+                      
+                      {/* Cancel Button - only for pending orders within grace period */}
+                      {isEditable && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleCancelOrder(order.id, order.order_code)}
+                          disabled={isCancelling === order.id}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          {isCancelling === order.id ? "Cancelling..." : "Cancel Order"}
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 )}

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { CartProvider } from "./contexts/CartContext";
+import { SavedItemsProvider } from "./contexts/SavedItemsContext";
 import { AuthProvider } from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -61,6 +62,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <CartProvider>
+              <SavedItemsProvider>
               <Toaster />
               <Sonner />
               <Routes>
@@ -196,6 +198,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
+              </SavedItemsProvider>
             </CartProvider>
           </AuthProvider>
         </BrowserRouter>
