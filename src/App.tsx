@@ -6,9 +6,11 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { CartProvider } from "./contexts/CartContext";
 import { SavedItemsProvider } from "./contexts/SavedItemsContext";
+import { CompareProvider } from "./contexts/CompareContext";
 import { AuthProvider } from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import CompareFloatingButton from "./components/CompareFloatingButton";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
@@ -20,6 +22,7 @@ import MyOrders from "./pages/MyOrders";
 import MyReviews from "./pages/MyReviews";
 import About from "./pages/About";
 import Profile from "./pages/Profile";
+import Compare from "./pages/Compare";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import Dashboard from "./pages/admin/Dashboard";
@@ -39,6 +42,7 @@ import PendingApproval from "./pages/seller/PendingApproval";
 import SellerSupport from "./pages/seller/Support";
 import SellerEarnings from "./pages/seller/Earnings";
 import SellerOrders from "./pages/seller/SellerOrders";
+import SellerAnalytics from "./pages/seller/Analytics";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PendingProducts from "./pages/admin/PendingProducts";
 import SupportTickets from "./pages/admin/SupportTickets";
@@ -63,8 +67,10 @@ const App = () => (
           <AuthProvider>
             <CartProvider>
               <SavedItemsProvider>
+              <CompareProvider>
               <Toaster />
               <Sonner />
+              <CompareFloatingButton />
               <Routes>
                 {/* Auth Routes - No Navbar/Footer */}
                 <Route path="/auth/login" element={<Login />} />
@@ -159,6 +165,11 @@ const App = () => (
                     <SellerEarnings />
                   </ProtectedRoute>
                 } />
+                <Route path="/seller/analytics" element={
+                  <ProtectedRoute requireSeller>
+                    <SellerAnalytics />
+                  </ProtectedRoute>
+                } />
                 
                 {/* Customer Routes - With Navbar/Footer */}
                 <Route element={<LayoutWithNavbarAndFooter />}>
@@ -195,9 +206,11 @@ const App = () => (
                     </ProtectedRoute>
                   } />
                   <Route path="about" element={<About />} />
+                  <Route path="compare" element={<Compare />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
+              </CompareProvider>
               </SavedItemsProvider>
             </CartProvider>
           </AuthProvider>
