@@ -1,4 +1,5 @@
 import { Package, Zap, Globe } from "lucide-react";
+import deliveryPerson from "@/assets/delivery-person.jpg";
 
 const About = () => {
   return (
@@ -13,11 +14,11 @@ const About = () => {
             Nigeria's premier destination for fast, affordable tech gadgets and fashion accessories
           </p>
 
-          {/* Team/Office Image */}
+          {/* Delivery Person Image */}
           <div className="mb-12">
             <img
-              src="https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1200"
-              alt="SwiftCart NG Team - Modern e-commerce collaboration"
+              src={deliveryPerson}
+              alt="SwiftCart NG delivery person in branded uniform"
               className="w-full h-64 md:h-80 object-cover rounded-xl shadow-lg"
             />
           </div>
