@@ -98,21 +98,6 @@ export default function SellerLogin() {
                 {loading ? 'Signing in...' : 'Sign In to Seller Portal'}
               </Button>
             </form>
-            
-            <div className="mt-6 space-y-2 text-center text-sm">
-              <p className="text-muted-foreground">
-                Want to become a seller?{' '}
-                <Link to="/auth/signup/seller" className="text-primary hover:underline font-medium">
-                  Register as Seller
-                </Link>
-              </p>
-              <p className="text-muted-foreground text-xs mt-4">
-                Are you a customer?{' '}
-                <Link to="/auth/login" className="text-primary hover:underline">
-                  Customer Login
-                </Link>
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
