@@ -71,7 +71,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-border">
+          <div className="p-6 border-b border-border bg-red-500/10">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="px-2 py-0.5 bg-red-500 text-white text-xs font-semibold rounded">
+                ADMIN
+              </div>
+            </div>
             <h1 className="text-xl font-bold text-primary">SwiftCart NG</h1>
             <p className="text-sm text-muted-foreground">Admin Dashboard</p>
           </div>
