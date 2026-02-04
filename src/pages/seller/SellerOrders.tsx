@@ -5,8 +5,10 @@ import { toast } from 'sonner';
 import SellerHeader from '@/components/seller/SellerHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Package, ShoppingBag } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Package, ShoppingBag, Eye, User, Mail, Phone, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface SellerOrderItem {
@@ -21,6 +23,10 @@ interface SellerOrder {
   order_code: string;
   status: string;
   created_at: string;
+  customer_name: string;
+  customer_email: string | null;
+  customer_phone: string;
+  delivery_address: string;
   items: SellerOrderItem[];
 }
 
@@ -28,6 +34,7 @@ export default function SellerOrders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<SellerOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<SellerOrder | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -53,7 +60,7 @@ export default function SellerOrders() {
 
       const productNames = sellerProducts.map(p => p.name);
 
-      // Get all orders with their items
+      // Get all orders with their items including customer info
       const { data: allOrders, error: ordersError } = await supabase
         .from('orders')
         .select(`
@@ -61,6 +68,10 @@ export default function SellerOrders() {
           order_code,
           status,
           created_at,
+          customer_name,
+          customer_email,
+          customer_phone,
+          delivery_address,
           order_items (
             product_name,
             quantity,
@@ -86,6 +97,10 @@ export default function SellerOrders() {
             order_code: order.order_code,
             status: order.status || 'pending',
             created_at: order.created_at,
+            customer_name: order.customer_name,
+            customer_email: order.customer_email,
+            customer_phone: order.customer_phone,
+            delivery_address: order.delivery_address,
             items: sellerItems
           });
         }
@@ -163,10 +178,12 @@ export default function SellerOrders() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Order ID</TableHead>
+                      <TableHead>Customer</TableHead>
                       <TableHead>Products</TableHead>
                       <TableHead>Quantity</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -174,6 +191,10 @@ export default function SellerOrders() {
                       <TableRow key={order.id}>
                         <TableCell className="font-mono text-sm">
                           {order.order_code}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm font-medium">{order.customer_name}</div>
+                          <div className="text-xs text-muted-foreground">{order.customer_email || 'No email'}</div>
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
@@ -201,6 +222,16 @@ export default function SellerOrders() {
                         <TableCell className="text-sm text-muted-foreground">
                           {format(new Date(order.created_at), 'MMM d, yyyy')}
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedOrder(order)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -208,6 +239,63 @@ export default function SellerOrders() {
               </CardContent>
             </Card>
           )}
+
+          {/* Order Detail Dialog */}
+          <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Order Details</DialogTitle>
+              </DialogHeader>
+              {selectedOrder && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm">{selectedOrder.order_code}</span>
+                    <Badge variant={getStatusVariant(selectedOrder.status)}>
+                      {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                    </Badge>
+                  </div>
+
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <h4 className="font-semibold text-sm">Customer Information</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span>{selectedOrder.customer_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span>{selectedOrder.customer_email || 'No email provided'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span>{selectedOrder.customer_phone}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <span>{selectedOrder.delivery_address}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <h4 className="font-semibold text-sm">Your Products in This Order</h4>
+                    <div className="space-y-2">
+                      {selectedOrder.items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between text-sm">
+                          <span>{item.product_name} × {item.quantity}</span>
+                          <span className="font-medium">₦{item.subtotal.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground">
+                    Ordered on {format(new Date(selectedOrder.created_at), 'MMMM d, yyyy h:mm a')}
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>
