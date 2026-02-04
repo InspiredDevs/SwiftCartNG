@@ -15,7 +15,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Eye } from 'lucide-react';
+import SellerDetailDialog from '@/components/admin/SellerDetailDialog';
 
 interface SellerStore {
   id: string;
@@ -31,6 +32,8 @@ export default function Sellers() {
   const navigate = useNavigate();
   const [sellers, setSellers] = useState<SellerStore[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -155,6 +158,17 @@ export default function Sellers() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSellerId(seller.id);
+                              setShowDetailDialog(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
                           {seller.is_approved ? (
                             <Button
                               variant="outline"
@@ -183,6 +197,12 @@ export default function Sellers() {
             )}
           </CardContent>
         </Card>
+
+        <SellerDetailDialog
+          open={showDetailDialog}
+          onOpenChange={setShowDetailDialog}
+          sellerId={selectedSellerId}
+        />
       </div>
     </AdminLayout>
   );
