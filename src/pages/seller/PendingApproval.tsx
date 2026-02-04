@@ -1,4 +1,4 @@
-import { Clock } from "lucide-react";
+import { Clock, Store } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,7 +14,20 @@ const PendingApproval = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-emerald-500/5 flex flex-col">
+      <header className="p-4 border-b bg-emerald-500/10">
+        <div className="container mx-auto flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-semibold rounded">
+              SELLER
+            </div>
+            <Store className="h-6 w-6 text-emerald-600" />
+            <span className="text-xl font-bold">SwiftCart NG</span>
+          </div>
+        </div>
+      </header>
+      
+      <div className="flex-1 flex items-center justify-center p-4">
       <Card className="max-w-md w-full text-center">
         <CardHeader>
           <div className="mx-auto w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4">
@@ -38,6 +51,8 @@ const PendingApproval = () => {
           </Button>
         </CardContent>
       </Card>
+
+      </div>
 
       <LogoutConfirmDialog
         open={showLogoutDialog}

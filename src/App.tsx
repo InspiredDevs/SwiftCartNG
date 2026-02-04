@@ -35,6 +35,7 @@ import Sellers from "./pages/admin/Sellers";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import SellerDashboard from "./pages/seller/SellerDashboard";
+import SellerLogin from "./pages/seller/SellerLogin";
 import SellerProducts from "./pages/seller/SellerProducts";
 import AddProduct from "./pages/seller/AddProduct";
 import EditProduct from "./pages/seller/EditProduct";
@@ -125,6 +126,7 @@ const App = () => (
                 } />
                 
                 {/* Seller Routes - No Navbar/Footer */}
+                <Route path="/seller/login" element={<SellerLogin />} />
                 <Route path="/seller/pending-approval" element={
                   <ProtectedRoute requireAuth>
                     <PendingApproval />
