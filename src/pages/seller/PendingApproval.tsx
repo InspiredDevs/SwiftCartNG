@@ -14,14 +14,14 @@ const PendingApproval = () => {
   };
 
   return (
-    <div className="min-h-screen bg-emerald-500/5 flex flex-col">
-      <header className="p-4 border-b bg-emerald-500/10">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="p-4 border-b">
         <div className="container mx-auto flex items-center justify-center">
           <div className="flex items-center gap-3">
-            <div className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-semibold rounded">
+            <div className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded">
               SELLER
             </div>
-            <Store className="h-6 w-6 text-emerald-600" />
+            <Store className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold">SwiftCart NG</span>
           </div>
         </div>
