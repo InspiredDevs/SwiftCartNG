@@ -17,7 +17,7 @@ export default function SellerLogin() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-emerald-500/5">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-lg">Loading...</div>
       </div>
     );
@@ -39,28 +39,27 @@ export default function SellerLogin() {
       toast.error(error.message || 'Invalid email or password');
     } else {
       toast.success('Login successful!');
-      // Navigation is handled by useAuth based on role
     }
     
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-emerald-500/5">
-      <header className="p-4 border-b bg-emerald-500/10">
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="p-4 border-b">
         <div className="container mx-auto flex items-center justify-center">
           <div className="flex items-center gap-3">
-            <div className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-semibold rounded">
+            <div className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded">
               SELLER
             </div>
-            <Store className="h-6 w-6 text-emerald-600" />
+            <Store className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold">SwiftCart NG</span>
           </div>
         </div>
       </header>
       
       <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md border-emerald-500/20">
+        <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Seller Portal</CardTitle>
             <CardDescription className="text-center">
@@ -93,7 +92,7 @@ export default function SellerLogin() {
               </div>
               <Button 
                 type="submit" 
-                className="w-full bg-emerald-600 hover:bg-emerald-700" 
+                className="w-full" 
                 disabled={loading}
               >
                 {loading ? 'Signing in...' : 'Sign In to Seller Portal'}
@@ -103,7 +102,7 @@ export default function SellerLogin() {
             <div className="mt-6 space-y-2 text-center text-sm">
               <p className="text-muted-foreground">
                 Want to become a seller?{' '}
-                <Link to="/auth/signup/seller" className="text-emerald-600 hover:underline font-medium">
+                <Link to="/auth/signup/seller" className="text-primary hover:underline font-medium">
                   Register as Seller
                 </Link>
               </p>
