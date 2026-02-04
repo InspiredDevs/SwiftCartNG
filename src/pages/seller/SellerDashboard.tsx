@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, ShoppingBag, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Package, ShoppingBag, AlertCircle, CheckCircle, Clock, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SellerHeader from '@/components/seller/SellerHeader';
+import EditStoreDialog from '@/components/seller/EditStoreDialog';
 
 interface SellerStore {
   id: string;
@@ -28,6 +29,7 @@ export default function SellerDashboard() {
   const [store, setStore] = useState<SellerStore | null>(null);
   const [stats, setStats] = useState<ProductStats>({ total: 0, pending: 0, approved: 0, rejected: 0 });
   const [loading, setLoading] = useState(true);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   useEffect(() => {
     if (!authLoading && (!user || !isSeller)) {
@@ -160,10 +162,20 @@ export default function SellerDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5" />
-                  Store Information
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingBag className="h-5 w-5" />
+                    Store Information
+                  </CardTitle>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowEditDialog(true)}
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div>
@@ -230,6 +242,13 @@ export default function SellerDashboard() {
           )}
         </div>
       </main>
+
+      <EditStoreDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        store={store}
+        onSuccess={fetchStoreInfo}
+      />
     </div>
   );
 }
