@@ -98,6 +98,12 @@ export default function SellerLogin() {
                 {loading ? 'Signing in...' : 'Sign In to Seller Portal'}
               </Button>
             </form>
+             
+             <div className="mt-6 text-center text-sm">
+               <Link to="/auth/forgot-password?portal=seller" className="text-primary hover:underline font-medium">
+                 Forgot your password?
+               </Link>
+             </div>
           </CardContent>
         </Card>
       </div>

@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { Navigate } from 'react-router-dom';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -93,6 +93,12 @@ export default function AdminLogin() {
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
+           
+           <div className="mt-6 text-center text-sm">
+             <Link to="/auth/forgot-password?portal=admin" className="text-primary hover:underline font-medium">
+               Forgot your password?
+             </Link>
+           </div>
         </CardContent>
       </Card>
     </div>
