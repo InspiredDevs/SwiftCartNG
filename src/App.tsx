@@ -47,6 +47,8 @@ import SellerAnalytics from "./pages/seller/Analytics";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PendingProducts from "./pages/admin/PendingProducts";
 import SupportTickets from "./pages/admin/SupportTickets";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +78,8 @@ const App = () => (
                 {/* Auth Routes - No Navbar/Footer */}
                 <Route path="/auth/login" element={<Login />} />
                 <Route path="/auth/signup" element={<Signup />} />
+                <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                <Route path="/auth/reset-password" element={<ResetPassword />} />
                 
                 {/* Admin Routes - No Navbar/Footer */}
                 <Route path="/admin/login" element={<AdminLogin />} />
