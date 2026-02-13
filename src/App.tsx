@@ -45,6 +45,7 @@ import SellerEarnings from "./pages/seller/Earnings";
 import SellerOrders from "./pages/seller/SellerOrders";
 import SellerAnalytics from "./pages/seller/Analytics";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { ScrollToTop } from "./components/ScrollToTop";
 import PendingProducts from "./pages/admin/PendingProducts";
 import SupportTickets from "./pages/admin/SupportTickets";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -67,6 +68,7 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <TooltipProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <AuthProvider>
             <CartProvider>
               <SavedItemsProvider>
