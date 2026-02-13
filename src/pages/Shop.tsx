@@ -3,6 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 import { Button } from "@/components/ui/button";
+import { ProductGridSkeleton } from "@/components/skeletons/ProductCardSkeleton";
+import PageTransition from "@/components/PageTransition";
+import { motion } from "framer-motion";
 
 const Shop = () => {
   const { products, loading } = useProducts();
@@ -43,6 +46,7 @@ const Shop = () => {
   };
 
   return (
+    <PageTransition>
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <h1 className="text-4xl font-bold mb-8">Shop All Products</h1>
@@ -168,13 +172,18 @@ const Shop = () => {
             </div>
 
             {loading ? (
-              <div className="text-center py-16">
-                <p className="text-xl text-muted-foreground">Loading products...</p>
-              </div>
+              <ProductGridSkeleton count={6} />
             ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {filteredProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
                 ))}
               </div>
             ) : (
@@ -198,6 +207,7 @@ const Shop = () => {
         </div>
       </div>
     </div>
+    </PageTransition>
   );
 };
 

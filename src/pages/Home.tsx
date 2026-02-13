@@ -5,6 +5,8 @@ import { useProducts } from "@/hooks/useProducts";
 import { ArrowRight, Truck, Shield, Headphones, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import heroBanner from "@/assets/hero-banner.jpg";
+import { ProductGridSkeleton } from "@/components/skeletons/ProductCardSkeleton";
+import PageTransition from "@/components/PageTransition";
 
 const Home = () => {
   const { products, loading } = useProducts();
@@ -28,6 +30,7 @@ const Home = () => {
   };
 
   return (
+    <PageTransition>
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative h-[500px] md:h-[600px] flex items-center overflow-hidden">
@@ -168,7 +171,7 @@ const Home = () => {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
           >
             {loading ? (
-              <p className="col-span-4 text-center text-muted-foreground">Loading products...</p>
+              <ProductGridSkeleton count={4} />
             ) : featuredProducts.length > 0 ? (
               featuredProducts.map((product, index) => (
                 <motion.div key={product.id} variants={itemVariants}>
@@ -235,6 +238,7 @@ const Home = () => {
         </div>
       </section>
     </div>
+    </PageTransition>
   );
 };
 

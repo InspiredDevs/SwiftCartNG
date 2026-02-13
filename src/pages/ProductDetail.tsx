@@ -7,6 +7,9 @@ import { ShoppingCart, Star, ArrowLeft, Package, Store, Plus, Minus } from "luci
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import ProductReviews from "@/components/ProductReviews";
+import ProductDetailSkeleton from "@/components/skeletons/ProductDetailSkeleton";
+import PageTransition from "@/components/PageTransition";
+import { motion } from "framer-motion";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -42,11 +45,7 @@ const ProductDetail = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl text-muted-foreground">Loading product...</p>
-      </div>
-    );
+    return <ProductDetailSkeleton />;
   }
 
   if (!product) {
@@ -67,6 +66,7 @@ const ProductDetail = () => {
   };
 
   return (
+    <PageTransition>
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <Link to="/shop">
@@ -78,13 +78,19 @@ const ProductDetail = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Image */}
-          <div className="bg-secondary rounded-lg overflow-hidden aspect-square">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="bg-secondary rounded-lg overflow-hidden aspect-square"
+          >
             <img
               src={product.image_url}
               alt={product.name}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
-          </div>
+          </motion.div>
 
           {/* Product Info */}
           <div>
@@ -213,6 +219,7 @@ const ProductDetail = () => {
         </div>
       </div>
     </div>
+    </PageTransition>
   );
 };
 
