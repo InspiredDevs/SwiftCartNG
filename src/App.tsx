@@ -11,47 +11,68 @@ import { AuthProvider } from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import CompareFloatingButton from "./components/CompareFloatingButton";
-import Home from "./pages/Home";
-import Shop from "./pages/Shop";
-import ProductDetail from "./pages/ProductDetail";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import OrderConfirmation from "./pages/OrderConfirmation";
-import Contact from "./pages/Contact";
-import MyOrders from "./pages/MyOrders";
-import MyReviews from "./pages/MyReviews";
-import About from "./pages/About";
-import Profile from "./pages/Profile";
-import Compare from "./pages/Compare";
-import NotFound from "./pages/NotFound";
-import AdminLogin from "./pages/admin/AdminLogin";
-import Dashboard from "./pages/admin/Dashboard";
-import Products from "./pages/admin/Products";
-import Orders from "./pages/admin/Orders";
-import Customers from "./pages/admin/Customers";
-import Settings from "./pages/admin/Settings";
-import Messages from "./pages/admin/Messages";
-import Sellers from "./pages/admin/Sellers";
-import Login from "./pages/auth/Login";
-import Signup from "./pages/auth/Signup";
-import SellerDashboard from "./pages/seller/SellerDashboard";
-import SellerLogin from "./pages/seller/SellerLogin";
-import SellerProducts from "./pages/seller/SellerProducts";
-import AddProduct from "./pages/seller/AddProduct";
-import EditProduct from "./pages/seller/EditProduct";
-import PendingApproval from "./pages/seller/PendingApproval";
-import SellerSupport from "./pages/seller/Support";
-import SellerEarnings from "./pages/seller/Earnings";
-import SellerOrders from "./pages/seller/SellerOrders";
-import SellerAnalytics from "./pages/seller/Analytics";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ScrollToTop } from "./components/ScrollToTop";
-import PendingProducts from "./pages/admin/PendingProducts";
-import SupportTickets from "./pages/admin/SupportTickets";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
+import { lazy, Suspense } from "react";
+import { Skeleton } from "./components/ui/skeleton";
+
+// Eagerly load critical above-the-fold pages
+import Home from "./pages/Home";
+
+// Lazy load everything else
+const Shop = lazy(() => import("./pages/Shop"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
+const Contact = lazy(() => import("./pages/Contact"));
+const MyOrders = lazy(() => import("./pages/MyOrders"));
+const MyReviews = lazy(() => import("./pages/MyReviews"));
+const About = lazy(() => import("./pages/About"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Compare = lazy(() => import("./pages/Compare"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const Dashboard = lazy(() => import("./pages/admin/Dashboard"));
+const Products = lazy(() => import("./pages/admin/Products"));
+const Orders = lazy(() => import("./pages/admin/Orders"));
+const Customers = lazy(() => import("./pages/admin/Customers"));
+const Settings = lazy(() => import("./pages/admin/Settings"));
+const Messages = lazy(() => import("./pages/admin/Messages"));
+const Sellers = lazy(() => import("./pages/admin/Sellers"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const Signup = lazy(() => import("./pages/auth/Signup"));
+const SellerDashboard = lazy(() => import("./pages/seller/SellerDashboard"));
+const SellerLogin = lazy(() => import("./pages/seller/SellerLogin"));
+const SellerProducts = lazy(() => import("./pages/seller/SellerProducts"));
+const AddProduct = lazy(() => import("./pages/seller/AddProduct"));
+const EditProduct = lazy(() => import("./pages/seller/EditProduct"));
+const PendingApproval = lazy(() => import("./pages/seller/PendingApproval"));
+const SellerSupport = lazy(() => import("./pages/seller/Support"));
+const SellerEarnings = lazy(() => import("./pages/seller/Earnings"));
+const SellerOrders = lazy(() => import("./pages/seller/SellerOrders"));
+const SellerAnalytics = lazy(() => import("./pages/seller/Analytics"));
+const PendingProducts = lazy(() => import("./pages/admin/PendingProducts"));
+const SupportTickets = lazy(() => import("./pages/admin/SupportTickets"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 
 const queryClient = new QueryClient();
+
+const PageFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="space-y-4 w-full max-w-md px-4">
+      <Skeleton className="h-8 w-3/4 mx-auto" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <Skeleton className="h-64 w-full rounded-lg" />
+    </div>
+  </div>
+);
+
+const S = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageFallback />}>{children}</Suspense>
+);
 
 const LayoutWithNavbarAndFooter = () => (
   <div className="flex flex-col min-h-screen">
@@ -77,145 +98,52 @@ const App = () => (
               <Sonner />
               <CompareFloatingButton />
               <Routes>
-                {/* Auth Routes - No Navbar/Footer */}
-                <Route path="/auth/login" element={<Login />} />
-                <Route path="/auth/signup" element={<Signup />} />
-                <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-                <Route path="/auth/reset-password" element={<ResetPassword />} />
+                {/* Auth Routes */}
+                <Route path="/auth/login" element={<S><Login /></S>} />
+                <Route path="/auth/signup" element={<S><Signup /></S>} />
+                <Route path="/auth/forgot-password" element={<S><ForgotPassword /></S>} />
+                <Route path="/auth/reset-password" element={<S><ResetPassword /></S>} />
                 
-                {/* Admin Routes - No Navbar/Footer */}
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/dashboard" element={
-                  <ProtectedRoute requireAdmin>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/products" element={
-                  <ProtectedRoute requireAdmin>
-                    <Products />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/orders" element={
-                  <ProtectedRoute requireAdmin>
-                    <Orders />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/customers" element={
-                  <ProtectedRoute requireAdmin>
-                    <Customers />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/settings" element={
-                  <ProtectedRoute requireAdmin>
-                    <Settings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/messages" element={
-                  <ProtectedRoute requireAdmin>
-                    <Messages />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/sellers" element={
-                  <ProtectedRoute requireAdmin>
-                    <Sellers />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/pending-products" element={
-                  <ProtectedRoute requireAdmin>
-                    <PendingProducts />
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/support-tickets" element={
-                  <ProtectedRoute requireAdmin>
-                    <SupportTickets />
-                  </ProtectedRoute>
-                } />
+                {/* Admin Routes */}
+                <Route path="/admin/login" element={<S><AdminLogin /></S>} />
+                <Route path="/admin/dashboard" element={<ProtectedRoute requireAdmin><S><Dashboard /></S></ProtectedRoute>} />
+                <Route path="/admin/products" element={<ProtectedRoute requireAdmin><S><Products /></S></ProtectedRoute>} />
+                <Route path="/admin/orders" element={<ProtectedRoute requireAdmin><S><Orders /></S></ProtectedRoute>} />
+                <Route path="/admin/customers" element={<ProtectedRoute requireAdmin><S><Customers /></S></ProtectedRoute>} />
+                <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><S><Settings /></S></ProtectedRoute>} />
+                <Route path="/admin/messages" element={<ProtectedRoute requireAdmin><S><Messages /></S></ProtectedRoute>} />
+                <Route path="/admin/sellers" element={<ProtectedRoute requireAdmin><S><Sellers /></S></ProtectedRoute>} />
+                <Route path="/admin/pending-products" element={<ProtectedRoute requireAdmin><S><PendingProducts /></S></ProtectedRoute>} />
+                <Route path="/admin/support-tickets" element={<ProtectedRoute requireAdmin><S><SupportTickets /></S></ProtectedRoute>} />
                 
-                {/* Seller Routes - No Navbar/Footer */}
-                <Route path="/seller/login" element={<SellerLogin />} />
-                <Route path="/seller/pending-approval" element={
-                  <ProtectedRoute requireAuth>
-                    <PendingApproval />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/dashboard" element={
-                  <ProtectedRoute requireSeller>
-                    <SellerDashboard />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/products" element={
-                  <ProtectedRoute requireSeller>
-                    <SellerProducts />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/products/new" element={
-                  <ProtectedRoute requireSeller>
-                    <AddProduct />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/products/:id/edit" element={
-                  <ProtectedRoute requireSeller>
-                    <EditProduct />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/support" element={
-                  <ProtectedRoute requireSeller>
-                    <SellerSupport />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/orders" element={
-                  <ProtectedRoute requireSeller>
-                    <SellerOrders />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/earnings" element={
-                  <ProtectedRoute requireSeller>
-                    <SellerEarnings />
-                  </ProtectedRoute>
-                } />
-                <Route path="/seller/analytics" element={
-                  <ProtectedRoute requireSeller>
-                    <SellerAnalytics />
-                  </ProtectedRoute>
-                } />
+                {/* Seller Routes */}
+                <Route path="/seller/login" element={<S><SellerLogin /></S>} />
+                <Route path="/seller/pending-approval" element={<ProtectedRoute requireAuth><S><PendingApproval /></S></ProtectedRoute>} />
+                <Route path="/seller/dashboard" element={<ProtectedRoute requireSeller><S><SellerDashboard /></S></ProtectedRoute>} />
+                <Route path="/seller/products" element={<ProtectedRoute requireSeller><S><SellerProducts /></S></ProtectedRoute>} />
+                <Route path="/seller/products/new" element={<ProtectedRoute requireSeller><S><AddProduct /></S></ProtectedRoute>} />
+                <Route path="/seller/products/:id/edit" element={<ProtectedRoute requireSeller><S><EditProduct /></S></ProtectedRoute>} />
+                <Route path="/seller/support" element={<ProtectedRoute requireSeller><S><SellerSupport /></S></ProtectedRoute>} />
+                <Route path="/seller/orders" element={<ProtectedRoute requireSeller><S><SellerOrders /></S></ProtectedRoute>} />
+                <Route path="/seller/earnings" element={<ProtectedRoute requireSeller><S><SellerEarnings /></S></ProtectedRoute>} />
+                <Route path="/seller/analytics" element={<ProtectedRoute requireSeller><S><SellerAnalytics /></S></ProtectedRoute>} />
                 
-                {/* Customer Routes - With Navbar/Footer */}
+                {/* Customer Routes */}
                 <Route element={<LayoutWithNavbarAndFooter />}>
                   <Route index element={<Home />} />
-                  <Route path="shop" element={<Shop />} />
-                  <Route path="product/:id" element={<ProductDetail />} />
-                  <Route path="cart" element={<Cart />} />
-                  <Route path="checkout" element={
-                    <ProtectedRoute requireAuth>
-                      <Checkout />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="order-confirmation" element={<OrderConfirmation />} />
-                  <Route path="contact" element={<Contact />} />
-                  <Route path="my-orders" element={
-                    <ProtectedRoute requireCustomer>
-                      <MyOrders />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="my-reviews" element={
-                    <ProtectedRoute requireCustomer>
-                      <MyReviews />
-                    </ProtectedRoute>
-                  } />
-                  {/* Alias for email deep-links */}
-                  <Route path="reviews" element={
-                    <ProtectedRoute requireCustomer>
-                      <MyReviews />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="profile" element={
-                    <ProtectedRoute requireCustomer>
-                      <Profile />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="about" element={<About />} />
-                  <Route path="compare" element={<Compare />} />
-                  <Route path="*" element={<NotFound />} />
+                  <Route path="shop" element={<S><Shop /></S>} />
+                  <Route path="product/:id" element={<S><ProductDetail /></S>} />
+                  <Route path="cart" element={<S><Cart /></S>} />
+                  <Route path="checkout" element={<ProtectedRoute requireAuth><S><Checkout /></S></ProtectedRoute>} />
+                  <Route path="order-confirmation" element={<S><OrderConfirmation /></S>} />
+                  <Route path="contact" element={<S><Contact /></S>} />
+                  <Route path="my-orders" element={<ProtectedRoute requireCustomer><S><MyOrders /></S></ProtectedRoute>} />
+                  <Route path="my-reviews" element={<ProtectedRoute requireCustomer><S><MyReviews /></S></ProtectedRoute>} />
+                  <Route path="reviews" element={<ProtectedRoute requireCustomer><S><MyReviews /></S></ProtectedRoute>} />
+                  <Route path="profile" element={<ProtectedRoute requireCustomer><S><Profile /></S></ProtectedRoute>} />
+                  <Route path="about" element={<S><About /></S>} />
+                  <Route path="compare" element={<S><Compare /></S>} />
+                  <Route path="*" element={<S><NotFound /></S>} />
                 </Route>
               </Routes>
               </CompareProvider>
